@@ -49,10 +49,12 @@ export default function DashboardIOT() {
     };
   }, []);
 
+  useEffect(() => {
+    console.log("jalan")
+  }, [data])
+
   //Alert
   const notify = (message, color) => {
-    var color = color;
-    var type;
     var options = {};
     options = {
       place: "tr",
@@ -63,9 +65,9 @@ export default function DashboardIOT() {
           </div>
         </div>
       ),
-      type: type,
+      type: color,
       icon: "nc-icon nc-bell-55",
-      autoDismiss: 7
+      autoDismiss: 3
     };
     notificationAlert.current.notificationAlert(options);
   };
@@ -73,67 +75,87 @@ export default function DashboardIOT() {
 
   const changeSwitchLampuRuangan1 = () => {
     const getRef = ref(database, "lampu_ruangan_1");
-    set(getRef, !lampuRuangan1)
-      .then(() => {
-        setLampuRuangan1(!lampuRuangan1)
-        notify(`Lampu Ruangan 1 Berhasil Di ${!lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
-      })
-      .catch((error) => {
-        notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
-        console.error("Terjadi kesalahan:", error);
-      });
+    if (getRef._repo.server_.connected_) {
+      set(getRef, !lampuRuangan1)
+        .then(() => {
+          setLampuRuangan1(!lampuRuangan1)
+          notify(`Lampu Ruangan 1 Berhasil Di ${!lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+        })
+        .catch((error) => {
+          notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+          console.log("Terjadi kesalahan:", error);
+        });
+    } else {
+      notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+    }
   }
 
   const changeSwitchLampuRuangan2 = () => {
     const getRef = ref(database, "lampu_ruangan_2");
-    set(getRef, !kipasRuangan1)
-      .then(() => {
-        setLampuRuangan2(!lampuRuangan2)
-        notify(`Lampu Ruangan 2 Berhasil Di ${!lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
-      })
-      .catch((error) => {
-        notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
-        console.error("Terjadi kesalahan:", error);
-      });
+    if (getRef._repo.server_.connected_) {
+      set(getRef, !kipasRuangan1)
+        .then(() => {
+          setLampuRuangan2(!lampuRuangan2)
+          notify(`Lampu Ruangan 2 Berhasil Di ${!lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+        })
+        .catch((error) => {
+          notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+          console.error("Terjadi kesalahan:", error);
+        });
+    } else {
+      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+    }
   }
 
   const changeSwitchKipasRuangan1 = () => {
     const getRef = ref(database, "kipas_ruangan_1");
-    set(getRef, !kipasRuangan1)
-      .then(() => {
-        setKipasRuangan1(!kipasRuangan1)
-        notify(`Kipas Ruangan 1 Berhasil Di ${!kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
-      })
-      .catch((error) => {
-        notify(`Kipas Ruangan 1 Gagal Di ${kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
-        console.error("Terjadi kesalahan:", error);
-      });
+    if (getRef._repo.server_.connected_) {
+      set(getRef, !kipasRuangan1)
+        .then(() => {
+          setKipasRuangan1(!kipasRuangan1)
+          notify(`Kipas Ruangan 1 Berhasil Di ${!kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+        })
+        .catch((error) => {
+          notify(`Kipas Ruangan 1 Gagal Di ${kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+          console.error("Terjadi kesalahan:", error);
+        });
+    } else {
+      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+    }
   }
 
   const changeSwitchKipasRuangan2 = () => {
     const getRef = ref(database, "kipas_ruangan_2");
-    set(getRef, !kipasRuangan2)
-      .then(() => {
-        setKipasRuangan2(!kipasRuangan2)
-        notify(`Kipas Ruangan 2 Berhasil Di ${!kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
-      })
-      .catch((error) => {
-        notify(`Kipas Ruangan 2 Gagal Di ${kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
-        console.error("Terjadi kesalahan:", error);
-      });
+    if (getRef._repo.server_.connected_) {
+      set(getRef, !kipasRuangan2)
+        .then(() => {
+          setKipasRuangan2(!kipasRuangan2)
+          notify(`Kipas Ruangan 2 Berhasil Di ${!kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+        })
+        .catch((error) => {
+          notify(`Kipas Ruangan 2 Gagal Di ${kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+          console.error("Terjadi kesalahan:", error);
+        });
+    } else {
+      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+    }
   }
 
   const changeSwitchWaterPump = () => {
     const getRef = ref(database, "water_pump");
-    set(getRef, !waterPump)
-      .then(() => {
-        setWaterPump(!waterPump)
-        notify(`Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`, "primary");
-      })
-      .catch((error) => {
-        notify(`Waterpump Gagal Di ${waterPump ? "Nyalakan" : "Matikan"}`, "danger");
-        console.error("Terjadi kesalahan:", error);
-      });
+    if (getRef._repo.server_.connected_) {
+      set(getRef, !waterPump)
+        .then(() => {
+          setWaterPump(!waterPump)
+          notify(`Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`, "primary");
+        })
+        .catch((error) => {
+          notify(`Waterpump Gagal Di ${waterPump ? "Nyalakan" : "Matikan"}`, "danger");
+          console.error("Terjadi kesalahan:", error);
+        });
+    } else {
+      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+    }
   }
 
   return (
