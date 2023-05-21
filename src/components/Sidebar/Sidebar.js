@@ -29,8 +29,14 @@ var ps;
 function Sidebar(props) {
   const sidebar = React.useRef();
   // verifies if routeName is the one active (in browser input)
-  const activeRoute = (routeName) => {
-    return props.location.pathname.indexOf(routeName) > -1 ? "active" : "";
+  const activeRoute = (routeName, following) => {
+    console.log({ routeName, following });
+    if (props.location.pathname.indexOf(routeName) > -1 || (routeName === following)) {
+      return "active"
+    } else {
+      return ""
+    }
+    // return props.location.pathname.indexOf(routeName) > -1 ? "active" : "";
   };
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
@@ -71,21 +77,28 @@ function Sidebar(props) {
         <Nav>
           {props.routes.map((prop, key) => {
             return (
-              <li
-                className={
-                  activeRoute(prop.path) + (prop.pro ? " active-pro" : "")
-                }
-                key={key}
-              >
-                <NavLink
-                  to={prop.layout + prop.path}
-                  className="nav-link"
-                  activeClassName="active"
-                >
-                  <i className={prop.icon} />
-                  <p>{prop.name}</p>
-                </NavLink>
-              </li>
+              <>
+                {prop.following == false ? (
+                  <>
+                    <li
+                      className={
+                        activeRoute(prop.path, prop.following) + (prop.pro ? " active-pro" : "")
+                      }
+                      key={key}
+                    >
+                      <NavLink
+                        to={prop.layout + prop.path}
+                        className="nav-link"
+                        activeClassName="active"
+                      >
+                        <i className={prop.icon} />
+                        <p>{prop.name}</p>
+                      </NavLink>
+                    </li>
+                  </>
+                ) : <div ></div>}
+
+              </>
             );
           })}
         </Nav>
