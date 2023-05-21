@@ -1,7 +1,8 @@
-import React,{ useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Line, Pie } from "react-chartjs-2";
 import {
   Card,
+  UncontrolledAlert,
   CardHeader,
   CardBody,
   CardFooter,
@@ -9,6 +10,7 @@ import {
   Row,
   Col
 } from "reactstrap";
+import NotificationAlert from "react-notification-alert";
 
 import { Space, Switch, Row as Rows, Col as Cols } from 'antd';
 
@@ -16,57 +18,130 @@ import database from "config/firebase";
 import { getDatabase, ref, onValue, off, get, set } from "firebase/database";
 
 export default function DashboardIOT() {
-    const [data, setData] = useState([]);
-    const [lampuRuangan1, setLampuRuangan1] = useState(false)
-    const [lampuRuangan2, setLampuRuangan2] = useState(false)
-    const [kipasRuangan1, setKipasRuangan1] = useState(false)
-    const [kipasRuangan2, setKipasRuangan2] = useState(false)
-    const [waterPump, setWaterPump] = useState(false)
+  const [data, setData] = useState([]);
+  const [lampuRuangan1, setLampuRuangan1] = useState(false)
+  const [lampuRuangan2, setLampuRuangan2] = useState(false)
+  const [kipasRuangan1, setKipasRuangan1] = useState(false)
+  const [kipasRuangan2, setKipasRuangan2] = useState(false)
+  const [waterPump, setWaterPump] = useState(false)
+  const notificationAlert = React.useRef();
 
 
-    
+  useEffect(() => {
+    const databaseRef = ref(database);
 
-    useEffect(() => {
-      const databaseRef = ref(database);
-  
-      // Mendengarkan perubahan pada database
-      onValue(databaseRef, (snapshot) => {
-        if (snapshot.exists()) {
-          const value = snapshot.val();
-          setData(value);
-          setLampuRuangan1(value.lampu_ruangan_1)
-          setLampuRuangan2(value.lampu_ruangan_2)
-          setKipasRuangan1(value.kipas_ruangan_1)
-          setKipasRuangan2(value.kipas_ruangan_2)
-          setWaterPump(value.water_pump)
-        } else {
-          console.log("Tidak ada data yang tersedia.");
-        }
+    onValue(databaseRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const value = snapshot.val();
+        setData(value);
+        setLampuRuangan1(value.lampu_ruangan_1)
+        setLampuRuangan2(value.lampu_ruangan_2)
+        setKipasRuangan1(value.kipas_ruangan_1)
+        setKipasRuangan2(value.kipas_ruangan_2)
+        setWaterPump(value.water_pump)
+      } else {
+        console.log("Tidak ada data yang tersedia.");
+      }
+    });
+
+    return () => {
+      off(databaseRef);
+    };
+  }, []);
+
+  //Alert
+  const notify = (message, color) => {
+    var color = color;
+    var type;
+    var options = {};
+    options = {
+      place: "tr",
+      message: (
+        <div>
+          <div>
+            {message}
+          </div>
+        </div>
+      ),
+      type: type,
+      icon: "nc-icon nc-bell-55",
+      autoDismiss: 7
+    };
+    notificationAlert.current.notificationAlert(options);
+  };
+
+
+  const changeSwitchLampuRuangan1 = () => {
+    const getRef = ref(database, "lampu_ruangan_1");
+    set(getRef, !lampuRuangan1)
+      .then(() => {
+        setLampuRuangan1(!lampuRuangan1)
+        notify(`Lampu Ruangan 1 Berhasil Di ${!lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+      })
+      .catch((error) => {
+        notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+        console.error("Terjadi kesalahan:", error);
       });
-  
-      // Membersihkan listener saat komponen tidak lagi digunakan
-      return () => {
-        off(databaseRef);
-      };
-    }, []);
+  }
 
-    const changeSwitchLampuRuangan1 = () =>{
-      const lampRef = ref(database, "lampu_ruangan_1");
+  const changeSwitchLampuRuangan2 = () => {
+    const getRef = ref(database, "lampu_ruangan_2");
+    set(getRef, !kipasRuangan1)
+      .then(() => {
+        setLampuRuangan2(!lampuRuangan2)
+        notify(`Lampu Ruangan 2 Berhasil Di ${!lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+      })
+      .catch((error) => {
+        notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+        console.error("Terjadi kesalahan:", error);
+      });
+  }
 
-      set(lampRef, !lampuRuangan1)
-        .then(() => {
-          setLampuRuangan1(!lampuRuangan1)
-        })
-        .catch((error) => {
-          console.error("Terjadi kesalahan:", error);
-        });
-    }
-  
+  const changeSwitchKipasRuangan1 = () => {
+    const getRef = ref(database, "kipas_ruangan_1");
+    set(getRef, !kipasRuangan1)
+      .then(() => {
+        setKipasRuangan1(!kipasRuangan1)
+        notify(`Kipas Ruangan 1 Berhasil Di ${!kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+      })
+      .catch((error) => {
+        notify(`Kipas Ruangan 1 Gagal Di ${kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+        console.error("Terjadi kesalahan:", error);
+      });
+  }
+
+  const changeSwitchKipasRuangan2 = () => {
+    const getRef = ref(database, "kipas_ruangan_2");
+    set(getRef, !kipasRuangan2)
+      .then(() => {
+        setKipasRuangan2(!kipasRuangan2)
+        notify(`Kipas Ruangan 2 Berhasil Di ${!kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+      })
+      .catch((error) => {
+        notify(`Kipas Ruangan 2 Gagal Di ${kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+        console.error("Terjadi kesalahan:", error);
+      });
+  }
+
+  const changeSwitchWaterPump = () => {
+    const getRef = ref(database, "water_pump");
+    set(getRef, !waterPump)
+      .then(() => {
+        setWaterPump(!waterPump)
+        notify(`Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`, "primary");
+      })
+      .catch((error) => {
+        notify(`Waterpump Gagal Di ${waterPump ? "Nyalakan" : "Matikan"}`, "danger");
+        console.error("Terjadi kesalahan:", error);
+      });
+  }
+
   return (
     <>
+      <NotificationAlert ref={notificationAlert} />
       <div className="content">
         <Row>
-        <Col lg="3" md="6" sm="6">
+          <Col lg="3" md="6" sm="6">
             <Card className="card-stats">
               <CardBody>
                 <Row>
@@ -79,11 +154,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Suhu Ruangan 1</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.suhu_ruangan_1}°C</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.suhu_ruangan_1}°C</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -111,11 +186,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Suhu Ruangan 2</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.suhu_ruangan_2}°C</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.suhu_ruangan_2}°C</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -143,11 +218,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Pencahayaan Ruangan 1</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.cahaya_ruangan_1}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.cahaya_ruangan_1}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -175,11 +250,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Pencahayaan Ruangan 2</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.cahaya_ruangan_2}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.cahaya_ruangan_2}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -195,9 +270,9 @@ export default function DashboardIOT() {
             </Card>
           </Col>
         </Row>
-        
+
         <Row>
-        <Col lg="3" md="6" sm="6">
+          <Col lg="3" md="6" sm="6">
             <Card className="card-stats">
               <CardBody>
                 <Row>
@@ -210,11 +285,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Lampu Ruangan 1</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.lampu_ruangan_1 ? "Hidup" : "Mati"}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.lampu_ruangan_1 ? "Hidup" : "Mati"}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -226,15 +301,15 @@ export default function DashboardIOT() {
                 <div className="stats">
                   <Rows justify="space-between">
                     <Cols>
-                    <i className="fas fa-sync-alt" /> Update Now 
+                      <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
                     <Cols>
                       <Space direction="vertical">
-                        <Switch 
-                        checkedChildren="Menyala" 
-                        unCheckedChildren="Mati" 
-                        checked={data.lampu_ruangan_1 ? true : false} 
-                        onClick={changeSwitchLampuRuangan1}
+                        <Switch
+                          checkedChildren="Menyala"
+                          unCheckedChildren="Mati"
+                          checked={data.lampu_ruangan_1 ? true : false}
+                          onClick={changeSwitchLampuRuangan1}
                         />
                       </Space>
                     </Cols>
@@ -256,11 +331,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Lampu Ruangan 2</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.lampu_ruangan_2 ? "Hidup" : "Mati"}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.lampu_ruangan_2 ? "Hidup" : "Mati"}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -270,13 +345,18 @@ export default function DashboardIOT() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                <Rows justify="space-between">
+                  <Rows justify="space-between">
                     <Cols>
-                    <i className="fas fa-sync-alt" /> Update Now 
+                      <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
                     <Cols>
                       <Space direction="vertical">
-                        <Switch checkedChildren="Menyala" unCheckedChildren="Mati" checked={data.lampu_ruangan_2 ? true : false} />
+                        <Switch
+                          checkedChildren="Menyala"
+                          unCheckedChildren="Mati"
+                          checked={data.lampu_ruangan_2 ? true : false}
+                          onClick={changeSwitchLampuRuangan2}
+                        />
                       </Space>
                     </Cols>
                   </Rows>
@@ -297,11 +377,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Kipas Ruangan 1</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.kipas_ruangan_1 ? "Hidup" : "Mati"}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.kipas_ruangan_1 ? "Hidup" : "Mati"}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -311,13 +391,18 @@ export default function DashboardIOT() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                <Rows justify="space-between">
+                  <Rows justify="space-between">
                     <Cols>
-                    <i className="fas fa-sync-alt" /> Update Now 
+                      <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
                     <Cols>
                       <Space direction="vertical">
-                        <Switch checkedChildren="Menyala" unCheckedChildren="Mati" checked={data.kipas_ruangan_1 ? true : false} />
+                        <Switch
+                          checkedChildren="Menyala"
+                          unCheckedChildren="Mati"
+                          checked={data.kipas_ruangan_1 ? true : false}
+                          onClick={changeSwitchKipasRuangan1}
+                        />
                       </Space>
                     </Cols>
                   </Rows>
@@ -338,11 +423,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Kipas Ruangan 2</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.kipas_ruangan_2 ? "Hidup" : "Mati"}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.kipas_ruangan_2 ? "Hidup" : "Mati"}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -352,13 +437,18 @@ export default function DashboardIOT() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                <Rows justify="space-between">
+                  <Rows justify="space-between">
                     <Cols>
-                    <i className="fas fa-sync-alt" /> Update Now 
+                      <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
                     <Cols>
                       <Space direction="vertical">
-                        <Switch checkedChildren="Menyala" unCheckedChildren="Mati" checked={data.kipas_ruangan_2 ? true : false} />
+                        <Switch
+                          checkedChildren="Menyala"
+                          unCheckedChildren="Mati"
+                          checked={data.kipas_ruangan_2 ? true : false}
+                          onClick={changeSwitchKipasRuangan2}
+                        />
                       </Space>
                     </Cols>
                   </Rows>
@@ -382,11 +472,11 @@ export default function DashboardIOT() {
                     <div className="numbers">
                       <p className="card-category">Alat Penyiram Air</p>
                       <CardTitle tag="p">
-                      {data ? (
-                        <pre>{data.water_pump ? "Hidup" : "Mati"}</pre>
-                      ) : (
-                        <p>Loading...</p>
-                      )}
+                        {data ? (
+                          <pre>{data.water_pump ? "Hidup" : "Mati"}</pre>
+                        ) : (
+                          <p>Loading...</p>
+                        )}
                       </CardTitle>
                       <p />
                     </div>
@@ -396,13 +486,18 @@ export default function DashboardIOT() {
               <CardFooter>
                 <hr />
                 <div className="stats">
-                <Rows justify="space-between">
+                  <Rows justify="space-between">
                     <Cols>
-                    <i className="fas fa-sync-alt" /> Update Now 
+                      <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
                     <Cols>
                       <Space direction="vertical">
-                        <Switch checkedChildren="Menyala" unCheckedChildren="Mati" checked={data.water_pump ? true : false} />
+                        <Switch
+                          checkedChildren="Menyala"
+                          unCheckedChildren="Mati"
+                          checked={data.water_pump ? true : false}
+                          onClick={changeSwitchWaterPump}
+                        />
                       </Space>
                     </Cols>
                   </Rows>
