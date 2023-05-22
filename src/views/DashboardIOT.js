@@ -11,10 +11,12 @@ import {
   Col
 } from "reactstrap";
 import NotificationAlert from "react-notification-alert";
+import { NavLink } from "react-router-dom";
 
 import { Space, Switch, Row as Rows, Col as Cols } from 'antd';
 
-import database from "config/firebase";
+//firebase
+import {database, app} from "config/firebase";
 import { getDatabase, ref, onValue, off, get, set } from "firebase/database";
 
 export default function DashboardIOT() {
@@ -305,7 +307,14 @@ export default function DashboardIOT() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                      <p className="card-category">Lampu Ruangan 1</p>
+                      <p className="card-category">
+                      <NavLink
+                      to="/admin/lampu-ruangan-1"
+                      className="nav-link"
+                      activeClassName="active"
+                    >
+                      <p>Lampu Ruangan 1</p>
+                    </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.lampu_ruangan_1 ? "Hidup" : "Mati"}</pre>

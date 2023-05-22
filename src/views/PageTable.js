@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect, useState} from "react";
 import { Line, Pie } from "react-chartjs-2";
 import {
     Card,
@@ -12,40 +12,84 @@ import {
 // core components
 import { Space, Table, Tag } from 'antd';
 
+//firebase
+import {database, app} from "config/firebase";
+import { getDatabase, ref, onValue, off, get, set} from "firebase/database";
+import { getFirestore, collection, getDocs,addDoc } from 'firebase/firestore'
+
 export default function PageTable() {
-    const dataSource = [
-        {
-            key: '1',
-            name: 'Mike',
-            age: 32,
-            address: '10 Downing Street',
-        },
-        {
-            key: '2',
-            name: 'John',
-            age: 42,
-            address: '10 Downing Street',
-        },
-    ];
+    const db = getFirestore(app);
+    const collectionRef = collection(db, 'lampu_ruangan_1');
+    const [dataFireStore, setDataFireStore] = useState([])
+
+    useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const querySnapshot = await getDocs(collectionRef);
+            let arrData = []
+            let i = 1
+            querySnapshot.forEach((doc) => {
+            //   console.log(doc.id, ' => ', doc.data());
+              let obj = {
+                no : i++,
+                aksi : doc.data().aksi,
+                timestamps : doc.data().timestamps,
+                user : doc.data().user
+              }
+              arrData.push(obj)
+              // Lakukan sesuatu dengan data yang diperoleh dari Firestore
+            });
+            setDataFireStore(arrData)
+          } catch (error) {
+            console.log('Error fetching data:', error);
+          }
+        };
+
+        //tambahkan data ke firestore
+        // const addDataToFirestore = async () => {
+        //     try {
+        //       const newDocRef = await addDoc(collectionRef, {
+        //         Action: 'Nilai 1',
+        //         timestamps: 'Nilai 2',
+        //         user: 'bapaklu'
+        //         // Tambahkan bidang dan nilai data yang ingin Anda tambahkan
+        //       });
+        //       console.log('Dokumen berhasil ditambahkan dengan ID:', newDocRef.id);
+        //     } catch (error) {
+        //       console.error('Error menambahkan dokumen:', error);
+        //     }
+        // }
+    
+        fetchData();
+        // addDataToFirestore();
+    },[])
+
+    const dataSource = dataFireStore;
 
     const columns = [
         {
-            title: 'Name',
-            dataIndex: 'name',
-            key: 'name',
+            title: 'No',
+            dataIndex: 'no',
+            key: 'no',
         },
         {
-            title: 'Age',
-            dataIndex: 'age',
-            key: 'age',
+            title: 'Aksi',
+            dataIndex: 'aksi',
+            key: 'aksi',
         },
         {
-            title: 'Address',
-            dataIndex: 'address',
-            key: 'address',
+            title: 'Timestamps',
+            dataIndex: 'timestamps',
+            key: 'timestamps',
+        },
+        {
+            title: 'User',
+            dataIndex: 'user',
+            key: 'user',
         },
     ];
 
+    console.log({dataFireStore})
     return (
         <>
             <div className="content">
@@ -57,7 +101,7 @@ export default function PageTable() {
                                 <p className="card-category">note Header</p>
                             </CardHeader>
                             <CardBody>
-                                <Table dataSource={dataSource} columns={columns} />;
+                                <Table dataSource={dataSource} columns={columns} />
                             </CardBody>
                             <CardFooter>
                                 <hr />

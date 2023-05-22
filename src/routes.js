@@ -49,7 +49,7 @@ var routes = [
   },
   {
     path: "/lampu-ruangan-1",
-    name: "Page Table 2",
+    name: "Lampu Ruangan 1",
     icon: "nc-icon nc-planet",
     component: PageTable,
     layout: "/admin",

@@ -28,10 +28,16 @@ var ps;
 
 function Sidebar(props) {
   const sidebar = React.useRef();
+  const [arrRoute, setArrRoute] = React.useState(props.routes)
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName, following) => {
-    console.log({ routeName, following });
-    if (props.location.pathname.indexOf(routeName) > -1 || (routeName === following)) {
+    let arrResult = null
+    arrRoute.map((r)=>{
+      if(r.following === routeName){
+        arrResult = true
+      }
+    })
+    if (props.location.pathname.indexOf(routeName) > -1 || (routeName === following) || arrResult) {
       return "active"
     } else {
       return ""
@@ -77,28 +83,23 @@ function Sidebar(props) {
         <Nav>
           {props.routes.map((prop, key) => {
             return (
-              <>
-                {prop.following == false ? (
-                  <>
-                    <li
-                      className={
-                        activeRoute(prop.path, prop.following) + (prop.pro ? " active-pro" : "")
-                      }
-                      key={key}
+                <div style={{display: prop.following == false ? "block":"none"}}>
+                  <li
+                    className={
+                      activeRoute(prop.path, prop.following) + (prop.pro ? " active-pro" : "")
+                    }
+                    key={key}
+                  >
+                    <NavLink
+                      to={prop.layout + prop.path}
+                      className="nav-link"
+                      activeClassName="active"
                     >
-                      <NavLink
-                        to={prop.layout + prop.path}
-                        className="nav-link"
-                        activeClassName="active"
-                      >
-                        <i className={prop.icon} />
-                        <p>{prop.name}</p>
-                      </NavLink>
-                    </li>
-                  </>
-                ) : <div ></div>}
-
-              </>
+                      <i className={prop.icon} />
+                      <p>{prop.name}</p>
+                    </NavLink>
+                  </li>
+                </div>
             );
           })}
         </Nav>
