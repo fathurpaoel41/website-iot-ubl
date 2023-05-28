@@ -1,5 +1,4 @@
-import React,{useEffect, useState} from "react";
-import { Line, Pie } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
 import {
     Card,
     CardHeader,
@@ -9,13 +8,12 @@ import {
     Row,
     Col
 } from "reactstrap";
-// core components
-import { Space, Table, Tag } from 'antd';
+
+import { Table } from 'antd';
 
 //firebase
-import {database, app} from "config/firebase";
-import { getDatabase, ref, onValue, off, get, set} from "firebase/database";
-import { getFirestore, collection, getDocs,addDoc } from 'firebase/firestore/lite'
+import { app } from "config/firebase";
+import { getFirestore, collection, getDocs } from 'firebase/firestore/lite'
 
 export default function ActivityKipasRuangan1() {
     const db = getFirestore(app);
@@ -24,48 +22,41 @@ export default function ActivityKipasRuangan1() {
 
     useEffect(() => {
         const fetchData = async () => {
-          try {
-            const querySnapshot = await getDocs(collectionRef);
-            let arrData = []
-            let i = 1
-            querySnapshot.forEach((doc) => {
-            //   console.log(doc.id, ' => ', doc.data());
-              let obj = {
-                no : i++,
-                aksi : doc.data().aksi,
-                timestamps : doc.data().timestamps,
-                user : doc.data().user
-              }
-              arrData.push(obj)
-              // Lakukan sesuatu dengan data yang diperoleh dari Firestore
-            });
-            setDataFireStore(arrData)
-          } catch (error) {
-            console.log('Error fetching data:', error);
-          }
-        };
+            try {
+                const querySnapshot = await getDocs(collectionRef);
+                const arrData = [];
 
-        //tambahkan data ke firestore
-        // const addDataToFirestore = async () => {
-        //     try {
-        //       const newDocRef = await addDoc(collectionRef, {
-        //         Action: 'Nilai 1',
-        //         timestamps: 'Nilai 2',
-        //         user: 'bapaklu'
-        //         // Tambahkan bidang dan nilai data yang ingin Anda tambahkan
-        //       });
-        //       console.log('Dokumen berhasil ditambahkan dengan ID:', newDocRef.id);
-        //     } catch (error) {
-        //       console.error('Error menambahkan dokumen:', error);
-        //     }
-        // }
-    
+                querySnapshot.forEach((doc) => {
+                    const { aksi, timestamps, user } = doc.data();
+                    arrData.push({ aksi, timestamps, user });
+                });
+
+                arrData.sort((a, b) => parseDate(b.timestamps) - parseDate(a.timestamps));
+
+                const dataResult = arrData.map((r, index) => ({
+                    no: index + 1,
+                    aksi: r.aksi,
+                    timestamps: r.timestamps,
+                    user: r.user
+                }));
+
+                setDataFireStore(dataResult);
+            } catch (error) {
+                console.log('Error fetching data:', error);
+            }
+        };
         fetchData();
-        // addDataToFirestore();
-        
-    },[])
+
+    }, [])
 
     const dataSource = dataFireStore;
+
+    const parseDate = (timestampString) => {
+        const [date, time] = timestampString.split(' ');
+        const [day, month, year] = date.split('-');
+        const [hours, minutes, seconds] = time.split(':');
+        return new Date(year, month - 1, day, hours, minutes, seconds);
+    };
 
     const columns = [
         {

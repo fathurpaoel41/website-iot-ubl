@@ -30,7 +30,9 @@ function Login() {
             if (snapshot.exists()) {
               const userData = snapshot.val();
               // Lakukan sesuatu dengan data yang diambil, misalnya tampilkan di konsol
-              localStorage.setItem("datauser",JSON.stringify(userData))
+              localStorage.setItem("datauser", JSON.stringify(userData))
+              const currentTime = new Date().getTime();
+              localStorage.setItem("timeout", currentTime + (60 * 60 * 1000))
             } else {
               // Data tidak ditemukan
               console.log("Data tidak ditemukan.");

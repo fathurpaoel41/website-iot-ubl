@@ -19,4 +19,5 @@ const app = initializeApp(firebaseConfig);
 // Dapatkan referensi ke realtime database Firebase
 const database = getDatabase(app);
 
-export {database,app};
+
+export { database, app };

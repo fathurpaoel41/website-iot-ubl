@@ -29,8 +29,10 @@ import {
   getDocs,
   addDoc,
 } from "firebase/firestore/lite";
-import { getAuth, signInWithEmailAndPassword,createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import NotificationAlert from "react-notification-alert";
+import bcrypt from 'bcryptjs'
+const salt = bcrypt.genSaltSync(10)
 
 export default function ListUser() {
   const [dataUser, setDataUser] = useState([]);
@@ -100,39 +102,42 @@ export default function ListUser() {
   const changePassword = (e) => setPassword(e.target.value)
   const changeRole = (e) => setRole(e.target.value)
 
+  const createMD5Hash = (password) => {
+    return bcrypt.hashSync(password, '$2a$10$CwTycUXWue0Thq9StjUM0u')
+  }
+
   const onSubmit = (e) => {
     e.preventDefault();
     createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          // Signed in
-          const user = userCredential.user;
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        const hashPassword = createMD5Hash(password)
 
-          set(ref(database, "user/" + user.uid), {
-            name: name,
-            role: role,
-            email: email,
-            password: password
-          })
-            .then(() => {
-              // Data saved successfully!
-              notify("Data User Berhasil Dibuat", "primary");
-              setModal(!modal)
-            })
-            .catch((error) => {
-              //the write failed
-              alert(error);
-            });
+        set(ref(database, "user/" + user.uid), {
+          name: name,
+          role: role,
+          email: email,
+          password: hashPassword
         })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          alert(errorMessage);
-        });
+          .then(() => {
+            notify("Data User Berhasil Dibuat", "primary");
+            setModal(!modal)
+          })
+          .catch((error) => {
+            alert(error);
+          });
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        alert(errorMessage);
+      });
   }
 
   return (
     <>
-    <NotificationAlert ref={notificationAlert} />
+      <NotificationAlert ref={notificationAlert} />
       <Modal isOpen={modal} toggle={toggle}>
         <ModalHeader toggle={toggle}>Buat Data User Baru</ModalHeader>
         <ModalBody>
@@ -168,17 +173,18 @@ export default function ListUser() {
           </FormGroup>
           <FormGroup>
             <Label for="role">Role</Label>
-            <Input id="role" name="select" type="select" onChange={changeRole}>
+            <Input id="role" name="role" type="select" onChange={changeRole}>
+              {role == "" ? (<option value="-">--silahkan pilih role--</option>) : ""}
               <option value="administrator">administrator</option>
               <option value="eksekutor">eksekutor</option>
               <option value="viewer">viewer</option>
             </Input>
           </FormGroup>
+        </ModalBody>
+        <ModalFooter>
           <Button color="primary" onClick={onSubmit}>
             Submit
           </Button>
-        </ModalBody>
-        <ModalFooter>
           <Button color="secondary" onClick={toggle}>
             Cancel
           </Button>

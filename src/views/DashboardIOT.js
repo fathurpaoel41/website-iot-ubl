@@ -16,10 +16,10 @@ import { NavLink } from "react-router-dom";
 import { Space, Switch, Row as Rows, Col as Cols } from 'antd';
 
 //firebase
-import {database, app} from "config/firebase";
+import { database, app } from "config/firebase";
 import { getDatabase, ref, onValue, off, get, set, update } from "firebase/database"
-import { getFirestore, collection, getDocs,addDoc } from 'firebase/firestore'
-import { getAuth, signInWithEmailAndPassword,createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, collection, getDocs, addDoc } from 'firebase/firestore'
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function DashboardIOT() {
   const [data, setData] = useState([]);
@@ -31,7 +31,8 @@ export default function DashboardIOT() {
   const notificationAlert = React.useRef();
   const db = getFirestore(app);
   const auth = getAuth(app);
-  
+  const [dataUser, setDataUser] = useState([])
+
 
   useEffect(() => {
     // handleRegistration()
@@ -59,100 +60,14 @@ export default function DashboardIOT() {
       }
     });
 
+    const getDataUserLocal = JSON.parse(localStorage.getItem('datauser'))
+    setDataUser(getDataUserLocal)
+
     // return () => {
     //   off(databaseRef);
     // };
   }, []);
 
-  // const tesLogin = async (e) => {
-  //   try {
-  //     const hasil = await signInWithEmailAndPassword(auth, "admin@gmail.com", "123456");
-  //     // Login berhasil, lakukan tindakan yang sesuai
-  //     console.log('Login berhasil',hasil);
-  //   } catch (error) {
-  //     console.error('Error saat login:', error);
-  //     // Tangani kesalahan saat login
-  //   }
-  // };
-
-  const loginFirebase =()=>{
-    let emailSignin = "rahman@gmail.com"
-    let passwordSignin = "123456"
-    signInWithEmailAndPassword(auth, emailSignin, passwordSignin)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        let lgDate = new Date();
-
-        const userRef = ref(database, 'user/' + user.uid);
-
-        get(userRef).then((snapshot) => {
-          if (snapshot.exists()) {
-            const userData = snapshot.val();
-            // Lakukan sesuatu dengan data yang diambil, misalnya tampilkan di konsol
-            console.log(userData);
-          } else {
-            // Data tidak ditemukan
-            console.log("Data tidak ditemukan.");
-          }
-        })
-        .catch((error) => {
-          // Penanganan kesalahan saat mengambil data
-          console.error(error);
-        });
-
-
-        update(ref(database, "user/" + user.uid), {
-          last_login: lgDate
-        }).then((r) => {
-            // Data saved successfully!
-              alert("user telah sukses login = ");
-              console.log(user.uid)
-          })
-          .catch((error) => {
-            //the write failed
-            alert(error);
-          });
-      }).catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        alert(errorMessage);
-      });      
-    }
-
-    const handleRegistration = () => {
-      let name = "bapaklu"
-      let role = "viewer"
-      let emailSignup = "bapaklu@gmail.com"
-      let passwordSignup = "123456"
-
-      createUserWithEmailAndPassword(auth, emailSignup, passwordSignup)
-        .then((userCredential) => {
-          // Signed in
-          const user = userCredential.user;
-
-          set(ref(database, "user/" + user.uid), {
-            name: name,
-            role: role,
-            email: emailSignup,
-            password: passwordSignup
-          })
-            .then(() => {
-              // Data saved successfully!
-              alert("user telah sukses dibuat");
-            })
-            .catch((error) => {
-              //the write failed
-              alert(error);
-            });
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          alert(errorMessage);
-        });
-    };
-    
 
   //Alert
   const notify = (message, color) => {
@@ -173,7 +88,7 @@ export default function DashboardIOT() {
     notificationAlert.current.notificationAlert(options);
   };
 
-  const getTimeStamps =()=>{
+  const getTimeStamps = () => {
     const timestampSaatIni = Date.now();
     const tanggalSaatIni = new Date(timestampSaatIni);
     const tanggal = tanggalSaatIni.getDate();
@@ -186,7 +101,7 @@ export default function DashboardIOT() {
     return timestampFormat
   }
 
-  const addDataToFirestore = async(ref,data) =>{
+  const addDataToFirestore = async (ref, data) => {
     try {
       const newDocRef = await addDoc(ref, data);
       // console.log('Dokumen berhasil ditambahkan dengan ID:', newDocRef.id);
@@ -203,13 +118,13 @@ export default function DashboardIOT() {
         .then(() => {
           setLampuRuangan1(!lampuRuangan1)
 
-          const value = `${!lampuRuangan1?"Nyalakan Lampu" : "Matikan Lampu"}` 
+          const value = `${!lampuRuangan1 ? "Nyalakan Lampu" : "Matikan Lampu"}`
           const obj = {
-                aksi: value,
-                timestamps: getTimeStamps(),
-                user: 'bapaklu'
+            aksi: value,
+            timestamps: getTimeStamps(),
+            user: dataUser.name
           }
-          addDataToFirestore(collectionRef,obj)
+          addDataToFirestore(collectionRef, obj)
 
           notify(`Lampu Ruangan 1 Berhasil Di ${!lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
         })
@@ -229,14 +144,14 @@ export default function DashboardIOT() {
       set(getRef, !lampuRuangan2)
         .then(() => {
           setLampuRuangan2(!lampuRuangan2)
-          
-          const value = `${!lampuRuangan2?"Nyalakan Lampu" : "Matikan Lampu"}` 
+
+          const value = `${!lampuRuangan2 ? "Nyalakan Lampu" : "Matikan Lampu"}`
           const obj = {
-                aksi: value,
-                timestamps: getTimeStamps(),
-                user: 'bapaklu'
+            aksi: value,
+            timestamps: getTimeStamps(),
+            user: dataUser.name
           }
-          addDataToFirestore(collectionRef,obj)
+          addDataToFirestore(collectionRef, obj)
 
           notify(`Lampu Ruangan 2 Berhasil Di ${!lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
         })
@@ -258,13 +173,13 @@ export default function DashboardIOT() {
         .then(() => {
           setKipasRuangan1(!kipasRuangan1)
 
-          const value = `${!kipasRuangan1?"Nyalakan Kipas" : "Matikan Kipas"}` 
+          const value = `${!kipasRuangan1 ? "Nyalakan Kipas" : "Matikan Kipas"}`
           const obj = {
-                aksi: value,
-                timestamps: getTimeStamps(),
-                user: 'bapaklu'
+            aksi: value,
+            timestamps: getTimeStamps(),
+            user: dataUser.name
           }
-          addDataToFirestore(collectionRef,obj)
+          addDataToFirestore(collectionRef, obj)
 
           notify(`Kipas Ruangan 1 Berhasil Di ${!kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
         })
@@ -286,13 +201,13 @@ export default function DashboardIOT() {
         .then(() => {
           setKipasRuangan2(!kipasRuangan2)
 
-          const value = `${!kipasRuangan2?"Nyalakan Kipas" : "Matikan Kipas"}` 
+          const value = `${!kipasRuangan2 ? "Nyalakan Kipas" : "Matikan Kipas"}`
           const obj = {
-                aksi: value,
-                timestamps: getTimeStamps(),
-                user: 'bapaklu'
+            aksi: value,
+            timestamps: getTimeStamps(),
+            user: dataUser.name
           }
-          addDataToFirestore(collectionRef,obj)
+          addDataToFirestore(collectionRef, obj)
 
           notify(`Kipas Ruangan 2 Berhasil Di ${!kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
         })
@@ -314,13 +229,13 @@ export default function DashboardIOT() {
         .then(() => {
           setWaterPump(!waterPump)
 
-          const value = `${!waterPump?"Nyalakan Water Pump" : "Matikan Water Pump"}` 
+          const value = `${!waterPump ? "Nyalakan Water Pump" : "Matikan Water Pump"}`
           const obj = {
-                aksi: value,
-                timestamps: getTimeStamps(),
-                user: 'bapaklu'
+            aksi: value,
+            timestamps: getTimeStamps(),
+            user: dataUser.name
           }
-          addDataToFirestore(collectionRef,obj)
+          addDataToFirestore(collectionRef, obj)
 
           notify(`Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`, "primary");
         })
@@ -481,13 +396,13 @@ export default function DashboardIOT() {
                   <Col md="8" xs="7">
                     <div className="numbers">
                       <p className="card-category">
-                      <NavLink
-                      to="/admin/activity-lampu-ruangan-1"
-                      className="nav-link"
-                      activeClassName="active"
-                    >
-                      <p>Lampu Ruangan 1</p>
-                    </NavLink></p>
+                        <NavLink
+                          to="/admin/activity-lampu-ruangan-1"
+                          className="nav-link"
+                          activeClassName="active"
+                        >
+                          <p>Lampu Ruangan 1</p>
+                        </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.lampu_ruangan_1 ? "Hidup" : "Mati"}</pre>
@@ -533,14 +448,14 @@ export default function DashboardIOT() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                    <p className="card-category">
-                      <NavLink
-                      to="/admin/activity-lampu-ruangan-2"
-                      className="nav-link"
-                      activeClassName="active"
-                    >
-                      <p>Lampu Ruangan 2</p>
-                    </NavLink></p>
+                      <p className="card-category">
+                        <NavLink
+                          to="/admin/activity-lampu-ruangan-2"
+                          className="nav-link"
+                          activeClassName="active"
+                        >
+                          <p>Lampu Ruangan 2</p>
+                        </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.lampu_ruangan_2 ? "Hidup" : "Mati"}</pre>
@@ -586,14 +501,14 @@ export default function DashboardIOT() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                    <p className="card-category">
-                      <NavLink
-                      to="/admin/activity-kipas-ruangan-1"
-                      className="nav-link"
-                      activeClassName="active"
-                    >
-                      <p>Kipas Ruangan 1</p>
-                    </NavLink></p>
+                      <p className="card-category">
+                        <NavLink
+                          to="/admin/activity-kipas-ruangan-1"
+                          className="nav-link"
+                          activeClassName="active"
+                        >
+                          <p>Kipas Ruangan 1</p>
+                        </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.kipas_ruangan_1 ? "Hidup" : "Mati"}</pre>
@@ -639,14 +554,14 @@ export default function DashboardIOT() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                    <p className="card-category">
-                      <NavLink
-                      to="/admin/activity-kipas-ruangan-2"
-                      className="nav-link"
-                      activeClassName="active"
-                    >
-                      <p>Kipas Ruangan 2</p>
-                    </NavLink></p>
+                      <p className="card-category">
+                        <NavLink
+                          to="/admin/activity-kipas-ruangan-2"
+                          className="nav-link"
+                          activeClassName="active"
+                        >
+                          <p>Kipas Ruangan 2</p>
+                        </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.kipas_ruangan_2 ? "Hidup" : "Mati"}</pre>
@@ -695,14 +610,14 @@ export default function DashboardIOT() {
                   </Col>
                   <Col md="8" xs="7">
                     <div className="numbers">
-                    <p className="card-category">
-                      <NavLink
-                      to="/admin/activity-water-pump"
-                      className="nav-link"
-                      activeClassName="active"
-                    >
-                      <p>Water Pump</p>
-                    </NavLink></p>
+                      <p className="card-category">
+                        <NavLink
+                          to="/admin/activity-water-pump"
+                          className="nav-link"
+                          activeClassName="active"
+                        >
+                          <p>Water Pump</p>
+                        </NavLink></p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.water_pump ? "Hidup" : "Mati"}</pre>
