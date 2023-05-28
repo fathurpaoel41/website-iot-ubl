@@ -45,8 +45,10 @@ import {
   ModalFooter,
   Input,
   Label,
+  Spinner
 } from "reactstrap";
 import NotificationAlert from "react-notification-alert";
+import * as yup from 'yup'
 
 
 function User() {
@@ -56,6 +58,138 @@ function User() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
+
+  //validasi 
+  const [values, setValues] = useState({
+    oldPassword: "",
+    newPassword: "",
+    passwordConfirmation: "",
+  })
+
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitting, setSubmitting] = useState(true);
+  const [spin, setSpin] = useState(false);
+  const validationSchema = yup.object().shape({
+    oldPassword: yup.string().min(6, 'Password minimal 6 karakter').required('Password Lama Harus Diisi'),
+    newPassword: yup.string().min(6, 'Password minimal 6 karakter').required('Password Baru Harus diisi'),
+    confirmPassword: yup
+      .string()
+      .oneOf([yup.ref('newPassword'), null], 'Konfirmasi password tidak sesuai')
+      .required('Konfirmasi password harus diisi'),
+  });
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
+
+    validationSchema
+      .validateAt(name, { [name]: value })
+      .then(() => {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined, // Reset error untuk field yang valid
+        }));
+
+        setSubmitting(false);
+      })
+      .catch((err) => {
+        setSubmitting(true);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: err.message, // Set error untuk field yang tidak valid
+        }));
+      });
+
+  };
+
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+
+    setTouched((prevTouched) => ({
+      ...prevTouched,
+      [name]: true,
+    }));
+
+    validationSchema
+      .validateAt(name, { [name]: value })
+      .then(() => {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined, // Reset error untuk field yang valid
+        }));
+        setSubmitting(false)
+      })
+      .catch((err) => {
+        setSubmitting(true)
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: err.message, // Set error untuk field yang tidak valid
+        }));
+      });
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setSpin(true)
+    setTouched({
+      oldPassword: true,
+      newPassword: true,
+      confirmPassword: true,
+    });
+
+    validationSchema
+      .validate(values, { abortEarly: false })
+      .then(() => {
+        // Lakukan tindakan lanjutan, seperti mengirim data ke server
+        console.log(values)
+
+        const auth = getAuth(app);
+
+        signInWithEmailAndPassword(auth, dataUser.email, values.oldPassword)
+          .then((userCredential) => {
+            const user = userCredential.user;
+
+            updatePassword(user, values.newPassword)
+              .then(() => {
+                console.log('Password berhasil diubah');
+                notify("Password Berhasil Diubah", "primary");
+                setModal(!modal)
+                setSpin(false)
+              })
+              .catch((error) => {
+                notify("Password Gagal Diubah", "danger");
+                setModal(!modal)
+                setSpin(false)
+                console.error('Gagal mengubah password:', error);
+              });
+          })
+          .catch((error) => {
+            notify("Password Gagal Diubah", "danger");
+            setModal(!modal)
+            setSpin(false)
+            console.error('Gagal melakukan masuk:', error);
+          });
+
+        setErrors({}); // Reset state errors ketika validasi berhasil
+        setSubmitting(true);
+      })
+      .catch((err) => {
+        const validationErrors = {};
+
+        err.inner.forEach((error) => {
+          validationErrors[error.path] = error.message;
+        });
+        setSubmitting(true)
+        setErrors(validationErrors);
+        setSpin(false)
+      });
+  };
+  //validasi selesai
 
 
   useEffect(() => {
@@ -87,78 +221,63 @@ function User() {
     notificationAlert.current.notificationAlert(options);
   };
 
-  const onSubmit = () => {
-    // Ubah Password
-    const auth = getAuth(app);
-
-    signInWithEmailAndPassword(auth, dataUser.email, oldPassword)
-      .then((userCredential) => {
-        const user = userCredential.user;
-
-        updatePassword(user, newPassword)
-          .then(() => {
-            console.log('Password berhasil diubah');
-            notify("Password Berhasil Diubah", "primary");
-            setModal(!modal)
-          })
-          .catch((error) => {
-            notify("Password Gagal Diubah", "danger");
-            setModal(!modal)
-            console.error('Gagal mengubah password:', error);
-          });
-      })
-      .catch((error) => {
-        notify("Password Gagal Diubah", "danger");
-        setModal(!modal)
-        console.error('Gagal melakukan masuk:', error);
-      });
-  }
 
   return (
     <>
       <NotificationAlert ref={notificationAlert} />
       <Modal isOpen={modal} toggle={toggle}>
-        <ModalHeader toggle={toggle}>Buat Data User Baru</ModalHeader>
-        <ModalBody>
-          <FormGroup>
-            <Label for="password_lama">Masukan Password lama</Label>
-            <Input
-              id="password_lama"
-              name="password_lama"
-              placeholder="Masukan Passwod Lama"
-              type="password"
-              onChange={changeOldPassword}
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label for="pasword_baru">Masukan Password Baru</Label>
-            <Input
-              id="password_baru"
-              name="password_baru"
-              placeholder="Masukan Password Baru"
-              type="password"
-              onChange={changeNewPassword}
-            />
-          </FormGroup>
-          <FormGroup>
-            <Label for="password_confirmation">Masukan Konfirmasi Password</Label>
-            <Input
-              id="password_confirmation"
-              name="password_confirmation"
-              placeholder="Masukan Password Konfirmasi"
-              type="password"
-              onChange={changePasswordConfirmation}
-            />
-          </FormGroup>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="primary" onClick={onSubmit}>
-            Submit
-          </Button>
-          <Button color="secondary" onClick={toggle}>
-            Cancel
-          </Button>
-        </ModalFooter>
+        <form onSubmit={handleSubmit}>
+          <ModalHeader toggle={toggle}>Buat Data User Baru</ModalHeader>
+          <ModalBody>
+            <FormGroup>
+              <Label for="oldPassword">Masukan Password lama</Label>
+              <Input
+                id="oldPassword"
+                name="oldPassword"
+                placeholder="Masukan Passwod Lama"
+                type="password"
+                value={values.oldPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+              {touched.oldPassword && errors.oldPassword && <div>{errors.oldPassword}</div>}
+            </FormGroup>
+            <FormGroup>
+              <Label for="newPassword">Masukan Password Baru</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                placeholder="Masukan Password Baru"
+                type="password"
+                value={values.newPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+              {touched.newPassword && errors.newPassword && <div>{errors.newPassword}</div>}
+            </FormGroup>
+            <FormGroup>
+              <Label for="confirmPassword">Masukan Konfirmasi Password</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Masukan Password Konfirmasi"
+                type="password"
+                value={values.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+              {touched.confirmPassword && errors.confirmPassword && <div>{errors.confirmPassword}</div>}
+            </FormGroup>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" type="submit" disabled={submitting}>
+              Submit {spin ? <Spinner size="sm">Loading...</Spinner> : ""}
+            </Button>
+            <Button color="secondary" onClick={toggle}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </form>
       </Modal>
       <div className="content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <Row>

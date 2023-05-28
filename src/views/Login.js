@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import iotImage from "../assets/img/iot.jpg"; // Ubah path gambar sesuai dengan lokasi gambar Anda
 import { database, app } from "config/firebase";
 import {
@@ -10,63 +10,138 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import * as yup from 'yup';
+import { Spinner } from "reactstrap"
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(true);
+  const [values, setValues] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [errorLogin, setErrorLogin] = useState(false);
+  const [spin, setSpin] = useState(false);
+
   const auth = getAuth(app);
 
-  const onSubmit = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in
-        const user = userCredential.user;
-        let lgDate = new Date();
+  const validationSchema = yup.object().shape({
+    email: yup.string().email('Email tidak valid').required('Email harus diisi'),
+    password: yup.string().min(6, 'Password minimal 6 karakter').required('Password harus diisi')
+  });
 
-        const userRef = ref(database, "user/" + user.uid);
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-        get(userRef)
-          .then((snapshot) => {
-            if (snapshot.exists()) {
-              const userData = snapshot.val();
-              // Lakukan sesuatu dengan data yang diambil, misalnya tampilkan di konsol
-              localStorage.setItem("datauser", JSON.stringify(userData))
-              const currentTime = new Date().getTime();
-              localStorage.setItem("timeout", currentTime + (60 * 60 * 1000))
-            } else {
-              // Data tidak ditemukan
-              console.log("Data tidak ditemukan.");
-            }
-          })
-          .catch((error) => {
-            // Penanganan kesalahan saat mengambil data
-            console.error(error);
-          });
+    setValues((prevValues) => ({
+      ...prevValues,
+      [name]: value,
+    }));
 
-        update(ref(database, "user/" + user.uid), {
-          last_login: lgDate,
-        })
-          .then((r) => {
-            // Data saved successfully!
-            alert("user telah sukses login = ");
-            console.log(user.uid);
-            localStorage.setItem("login", "true");
-            window.location.reload();
-          })
-          .catch((error) => {
-            //the write failed
-            alert(error);
-          });
+    validationSchema
+      .validateAt(name, { [name]: value })
+      .then(() => {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined, // Reset error untuk field yang valid
+        }));
+        setSubmitting(false)
       })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        alert(errorMessage);
+      .catch((err) => {
+        setSubmitting(true)
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: err.message, // Set error untuk field yang tidak valid
+        }));
       });
   };
 
-  const changeEmail = (e) => setEmail(e.target.value);
-  const changePassword = (e) => setPassword(e.target.value);
+  const handleBlur = (event) => {
+    const { name } = event.target;
+
+    setTouched((prevTouched) => ({
+      ...prevTouched,
+      [name]: true,
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setSpin(true)
+    setTouched({
+      email: true,
+      password: true,
+    });
+
+    validationSchema
+      .validate(values, { abortEarly: false })
+      .then(() => {
+        // Lakukan tindakan lanjutan, seperti mengirim data ke server
+        console.log('Data formulir:', values);
+        setErrors({}); // Reset state errors ketika validasi berhasil
+        setSubmitting(true);
+        signInWithEmailAndPassword(auth, values.email, values.password)
+          .then((userCredential) => {
+            // Signed in
+            const user = userCredential.user;
+            let lgDate = new Date();
+
+            const userRef = ref(database, "user/" + user.uid);
+
+            get(userRef)
+              .then((snapshot) => {
+                if (snapshot.exists()) {
+                  const userData = snapshot.val();
+                  // Lakukan sesuatu dengan data yang diambil, misalnya tampilkan di konsol
+                  localStorage.setItem("datauser", JSON.stringify(userData))
+                  const currentTime = new Date().getTime();
+                  localStorage.setItem("timeout", currentTime + (60 * 60 * 1000))
+                } else {
+                  // Data tidak ditemukan
+                  console.log("Data tidak ditemukan.");
+                }
+              })
+              .catch((error) => {
+                // Penanganan kesalahan saat mengambil data
+                console.error(error);
+              });
+
+            update(ref(database, "user/" + user.uid), {
+              last_login: lgDate,
+            })
+              .then((r) => {
+                // Data saved successfully!
+                console.log("user telah sukses login = ");
+                console.log(user.uid);
+                localStorage.setItem("login", "true");
+                window.location.reload();
+              })
+              .catch((error) => {
+                //the write failed
+                console.log(error);
+              });
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log(errorMessage);
+            setErrorLogin(true)
+            setSpin(false)
+          });
+      })
+      .catch((err) => {
+        const validationErrors = {};
+
+        err.inner.forEach((error) => {
+          validationErrors[error.path] = error.message;
+        });
+        setSubmitting(true)
+        setErrors(validationErrors);
+        setSpin(false)
+      });
+  };
+
 
   return (
     <div
@@ -86,45 +161,57 @@ function Login() {
             </div>
             <div className="row">
               <div className="col-12 col-md-6 mx-auto">
-                <div className="mb-4">
-                  <div className="form-group">
-                    <label htmlFor="email" className="form-label">
-                      Email address
-                    </label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="email"
-                      onChange={changeEmail}
-                    />
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-4">
+                    <div className="form-group">
+                      <label htmlFor="email" className="form-label">
+                        Email address
+                      </label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        id="email"
+                        name="email"
+                        value={values.email}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                    </div>
+                    {touched.email && errors.email && <div>{errors.email}</div>}
                   </div>
-                </div>
 
-                <div className="mb-4">
-                  <div className="form-group">
-                    <label htmlFor="password" className="form-label">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      onChange={changePassword}
-                    />
+                  <div className="mb-4">
+                    <div className="form-group">
+                      <label htmlFor="password" className="form-label">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="password"
+                        name="password"
+                        value={values.password}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                    </div>
+                    {touched.password && errors.password && <div>{errors.password}</div>}
                   </div>
-                </div>
-                <button
-                  className="btn btn-primary btn-lg mb-4 w-100"
-                  onClick={onSubmit}
-                >
-                  Sign in
-                </button>
+                  {errorLogin ? (<><center>Email Dan Password Salah</center></>) : ""}
+                  <button
+                    className="btn btn-primary btn-lg mb-4 w-100"
+                    type="submit"
+                    disabled={submitting}
+                  >
+                    Sign in {spin ? <Spinner size="sm">Loading...</Spinner> : ""}
+                  </button>
+                </form>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
