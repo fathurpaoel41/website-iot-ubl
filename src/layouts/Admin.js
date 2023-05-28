@@ -27,6 +27,7 @@ import Sidebar from "components/Sidebar/Sidebar.js";
 import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
 import routes from "routes.js";
+import { DataFetchProvider } from "../context/DataFetchContext";
 
 var ps;
 
@@ -58,35 +59,39 @@ function Dashboard(props) {
     setBackgroundColor(color);
   };
   return (
-    <div className="wrapper">
-      <Sidebar
-        {...props}
-        routes={routes}
-        bgColor={backgroundColor}
-        activeColor={activeColor}
-      />
-      <div className="main-panel" ref={mainPanel}>
-        <DemoNavbar {...props} />
-        <Switch>
-          {routes.map((prop, key) => {
-            return (
-              <Route
-                path={prop.layout + prop.path}
-                component={prop.component}
-                key={key}
-              />
-            );
-          })}
-        </Switch>
-        <Footer fluid />
+    <>
+      <DataFetchProvider>
+        <div className="wrapper">
+          <Sidebar
+            {...props}
+            routes={routes}
+            bgColor={backgroundColor}
+            activeColor={activeColor}
+          />
+          <div className="main-panel" ref={mainPanel}>
+            <DemoNavbar {...props} />
+            <Switch>
+              {routes.map((prop, key) => {
+                return (
+                  <Route
+                    path={prop.layout + prop.path}
+                    component={prop.component}
+                    key={key}
+                  />
+                );
+              })}
+            </Switch>
+            <Footer fluid />
+          </div>
+          {/* <FixedPlugin
+            bgColor={backgroundColor}
+            activeColor={activeColor}
+            handleActiveClick={handleActiveClick}
+            handleBgClick={handleBgClick}
+          /> */}
       </div>
-      {/* <FixedPlugin
-        bgColor={backgroundColor}
-        activeColor={activeColor}
-        handleActiveClick={handleActiveClick}
-        handleBgClick={handleBgClick}
-      /> */}
-    </div>
+      </DataFetchProvider>
+    </>
   );
 }
 

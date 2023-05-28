@@ -17,9 +17,9 @@ import {database, app} from "config/firebase";
 import { getDatabase, ref, onValue, off, get, set} from "firebase/database";
 import { getFirestore, collection, getDocs,addDoc } from 'firebase/firestore'
 
-export default function PageTable() {
+export default function ActivityWaterPump() {
     const db = getFirestore(app);
-    const collectionRef = collection(db, 'lampu_ruangan_1');
+    const collectionRef = collection(db, 'water_pump');
     const [dataFireStore, setDataFireStore] = useState([])
 
     useEffect(() => {
@@ -62,6 +62,7 @@ export default function PageTable() {
     
         fetchData();
         // addDataToFirestore();
+        
     },[])
 
     const dataSource = dataFireStore;
@@ -89,7 +90,6 @@ export default function PageTable() {
         },
     ];
 
-    console.log({dataFireStore})
     return (
         <>
             <div className="content">
