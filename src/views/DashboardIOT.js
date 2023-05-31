@@ -8,31 +8,70 @@ import {
   CardFooter,
   CardTitle,
   Row,
-  Col
+  Col,
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Label,
+  FormGroup,
+  Spinner,
 } from "reactstrap";
 import NotificationAlert from "react-notification-alert";
 import { NavLink } from "react-router-dom";
 
-import { Space, Switch, Row as Rows, Col as Cols } from 'antd';
+import { Space, Switch, Row as Rows, Col as Cols } from "antd";
 
 //firebase
 import { database, app } from "config/firebase";
-import { getDatabase, ref, onValue, off, get, set, update } from "firebase/database"
-import { getFirestore, collection, getDocs, addDoc } from 'firebase/firestore'
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  getDatabase,
+  ref,
+  onValue,
+  off,
+  get,
+  set,
+  update,
+} from "firebase/database";
+import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
+
+//Costum Component
+
+import * as yup from "yup";
 
 export default function DashboardIOT() {
   const [data, setData] = useState([]);
-  const [lampuRuangan1, setLampuRuangan1] = useState(false)
-  const [lampuRuangan2, setLampuRuangan2] = useState(false)
-  const [kipasRuangan1, setKipasRuangan1] = useState(false)
-  const [kipasRuangan2, setKipasRuangan2] = useState(false)
-  const [waterPump, setWaterPump] = useState(false)
+  const [lampuRuangan1, setLampuRuangan1] = useState(false);
+  const [lampuRuangan2, setLampuRuangan2] = useState(false);
+  const [kipasRuangan1, setKipasRuangan1] = useState(false);
+  const [kipasRuangan2, setKipasRuangan2] = useState(false);
+  const [waterPump, setWaterPump] = useState(false);
   const notificationAlert = React.useRef();
   const db = getFirestore(app);
   const auth = getAuth(app);
-  const [dataUser, setDataUser] = useState([])
-
+  const [dataUser, setDataUser] = useState([]);
+  //untuk modalnya
+  const [varOpenModal, setVarOpenModal] = useState(false);
+  const [titleModal, setTitleModal] = useState("");
+  const [databaseModal, setDatabaseModal] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [spin, setSpin] = useState(false);
+  const [nameInputDefault, setNameInputDefault] = useState("");
+  const [valueDefaultInput, setValueDefaultInput] = useState({
+    def_suhu_ruangan_1: "",
+    def_suhu_ruangan_2: "",
+    def_cahaya_ruangan_1: "",
+    def_cahaya_ruangan_2: "",
+    def_suhu_flame_fire: "",
+  });
+  const [errorInputValueDefault, setErrorInputValueDefault] = useState(false);
 
   useEffect(() => {
     // handleRegistration()
@@ -43,31 +82,28 @@ export default function DashboardIOT() {
     onValue(databaseRef, (snapshot) => {
       if (snapshot.exists()) {
         const value = snapshot.val();
-
         const dataArray = Object.keys(value.user).map((key) => {
           return { id: key, ...value.user[key] };
         });
-        console.log(dataArray);
         setData(value);
         // localStorage.setItem("iot",JSON.stringify(value))
-        setLampuRuangan1(value.lampu_ruangan_1)
-        setLampuRuangan2(value.lampu_ruangan_2)
-        setKipasRuangan1(value.kipas_ruangan_1)
-        setKipasRuangan2(value.kipas_ruangan_2)
-        setWaterPump(value.water_pump)
+        setLampuRuangan1(value.lampu_ruangan_1);
+        setLampuRuangan2(value.lampu_ruangan_2);
+        setKipasRuangan1(value.kipas_ruangan_1);
+        setKipasRuangan2(value.kipas_ruangan_2);
+        setWaterPump(value.water_pump);
       } else {
         console.log("Tidak ada data yang tersedia.");
       }
     });
 
-    const getDataUserLocal = JSON.parse(localStorage.getItem('datauser'))
-    setDataUser(getDataUserLocal)
+    const getDataUserLocal = JSON.parse(localStorage.getItem("datauser"));
+    setDataUser(getDataUserLocal);
 
     // return () => {
     //   off(databaseRef);
     // };
   }, []);
-
 
   //Alert
   const notify = (message, color) => {
@@ -76,14 +112,12 @@ export default function DashboardIOT() {
       place: "tr",
       message: (
         <div>
-          <div>
-            {message}
-          </div>
+          <div>{message}</div>
         </div>
       ),
       type: color,
       icon: "nc-icon nc-bell-55",
-      autoDismiss: 3
+      autoDismiss: 3,
     };
     notificationAlert.current.notificationAlert(options);
   };
@@ -98,159 +132,368 @@ export default function DashboardIOT() {
     const menit = tanggalSaatIni.getMinutes();
     const detik = tanggalSaatIni.getSeconds();
     const timestampFormat = `${tanggal}-${bulan}-${tahun} ${jam}:${menit}:${detik}`;
-    return timestampFormat
-  }
+    return timestampFormat;
+  };
 
   const addDataToFirestore = async (ref, data) => {
     try {
       const newDocRef = await addDoc(ref, data);
       // console.log('Dokumen berhasil ditambahkan dengan ID:', newDocRef.id);
     } catch (error) {
-      console.error('Error menambahkan dokumen:', error);
+      console.error("Error menambahkan dokumen:", error);
     }
-  }
+  };
 
   const changeSwitchLampuRuangan1 = () => {
     const getRef = ref(database, "lampu_ruangan_1");
-    const collectionRef = collection(db, 'lampu_ruangan_1');
+    const collectionRef = collection(db, "lampu_ruangan_1");
     if (getRef._repo.server_.connected_) {
       set(getRef, !lampuRuangan1)
         .then(() => {
-          setLampuRuangan1(!lampuRuangan1)
+          setLampuRuangan1(!lampuRuangan1);
 
-          const value = `${!lampuRuangan1 ? "Nyalakan Lampu" : "Matikan Lampu"}`
+          const value = `${
+            !lampuRuangan1 ? "Nyalakan Lampu" : "Matikan Lampu"
+          }`;
           const obj = {
             aksi: value,
             timestamps: getTimeStamps(),
-            user: dataUser.name
-          }
-          addDataToFirestore(collectionRef, obj)
+            user: dataUser.name,
+          };
+          addDataToFirestore(collectionRef, obj);
 
-          notify(`Lampu Ruangan 1 Berhasil Di ${!lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+          notify(
+            `Lampu Ruangan 1 Berhasil Di ${
+              !lampuRuangan1 ? "Nyalakan" : "Matikan"
+            }`,
+            "primary"
+          );
         })
         .catch((error) => {
-          notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+          notify(
+            `Lampu Ruangan 1 Gagal Di ${
+              lampuRuangan1 ? "Nyalakan" : "Matikan"
+            }`,
+            "danger"
+          );
           console.log("Terjadi kesalahan:", error);
         });
     } else {
-      notify(`Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+      notify(
+        `Lampu Ruangan 1 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`,
+        "danger"
+      );
     }
-  }
+  };
 
   const changeSwitchLampuRuangan2 = () => {
     const getRef = ref(database, "lampu_ruangan_2");
-    const collectionRef = collection(db, 'lampu_ruangan_2');
+    const collectionRef = collection(db, "lampu_ruangan_2");
     if (getRef._repo.server_.connected_) {
       set(getRef, !lampuRuangan2)
         .then(() => {
-          setLampuRuangan2(!lampuRuangan2)
+          setLampuRuangan2(!lampuRuangan2);
 
-          const value = `${!lampuRuangan2 ? "Nyalakan Lampu" : "Matikan Lampu"}`
+          const value = `${
+            !lampuRuangan2 ? "Nyalakan Lampu" : "Matikan Lampu"
+          }`;
           const obj = {
             aksi: value,
             timestamps: getTimeStamps(),
-            user: dataUser.name
-          }
-          addDataToFirestore(collectionRef, obj)
+            user: dataUser.name,
+          };
+          addDataToFirestore(collectionRef, obj);
 
-          notify(`Lampu Ruangan 2 Berhasil Di ${!lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+          notify(
+            `Lampu Ruangan 2 Berhasil Di ${
+              !lampuRuangan2 ? "Nyalakan" : "Matikan"
+            }`,
+            "primary"
+          );
         })
         .catch((error) => {
-          notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+          notify(
+            `Lampu Ruangan 2 Gagal Di ${
+              lampuRuangan2 ? "Nyalakan" : "Matikan"
+            }`,
+            "danger"
+          );
           console.error("Terjadi kesalahan:", error);
         });
     } else {
-      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+      notify(
+        `Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`,
+        "danger"
+      );
     }
-  }
+  };
 
   const changeSwitchKipasRuangan1 = () => {
     const getRef = ref(database, "kipas_ruangan_1");
-    const collectionRef = collection(db, 'kipas_ruangan_1');
+    const collectionRef = collection(db, "kipas_ruangan_1");
 
     if (getRef._repo.server_.connected_) {
       set(getRef, !kipasRuangan1)
         .then(() => {
-          setKipasRuangan1(!kipasRuangan1)
+          setKipasRuangan1(!kipasRuangan1);
 
-          const value = `${!kipasRuangan1 ? "Nyalakan Kipas" : "Matikan Kipas"}`
+          const value = `${
+            !kipasRuangan1 ? "Nyalakan Kipas" : "Matikan Kipas"
+          }`;
           const obj = {
             aksi: value,
             timestamps: getTimeStamps(),
-            user: dataUser.name
-          }
-          addDataToFirestore(collectionRef, obj)
+            user: dataUser.name,
+          };
+          addDataToFirestore(collectionRef, obj);
 
-          notify(`Kipas Ruangan 1 Berhasil Di ${!kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "primary");
+          notify(
+            `Kipas Ruangan 1 Berhasil Di ${
+              !kipasRuangan1 ? "Nyalakan" : "Matikan"
+            }`,
+            "primary"
+          );
         })
         .catch((error) => {
-          notify(`Kipas Ruangan 1 Gagal Di ${kipasRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+          notify(
+            `Kipas Ruangan 1 Gagal Di ${
+              kipasRuangan1 ? "Nyalakan" : "Matikan"
+            }`,
+            "danger"
+          );
           console.error("Terjadi kesalahan:", error);
         });
     } else {
-      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+      notify(
+        `Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`,
+        "danger"
+      );
     }
-  }
+  };
 
   const changeSwitchKipasRuangan2 = () => {
     const getRef = ref(database, "kipas_ruangan_2");
-    const collectionRef = collection(db, 'kipas_ruangan_2');
+    const collectionRef = collection(db, "kipas_ruangan_2");
 
     if (getRef._repo.server_.connected_) {
       set(getRef, !kipasRuangan2)
         .then(() => {
-          setKipasRuangan2(!kipasRuangan2)
+          setKipasRuangan2(!kipasRuangan2);
 
-          const value = `${!kipasRuangan2 ? "Nyalakan Kipas" : "Matikan Kipas"}`
+          const value = `${
+            !kipasRuangan2 ? "Nyalakan Kipas" : "Matikan Kipas"
+          }`;
           const obj = {
             aksi: value,
             timestamps: getTimeStamps(),
-            user: dataUser.name
-          }
-          addDataToFirestore(collectionRef, obj)
+            user: dataUser.name,
+          };
+          addDataToFirestore(collectionRef, obj);
 
-          notify(`Kipas Ruangan 2 Berhasil Di ${!kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "primary");
+          notify(
+            `Kipas Ruangan 2 Berhasil Di ${
+              !kipasRuangan2 ? "Nyalakan" : "Matikan"
+            }`,
+            "primary"
+          );
         })
         .catch((error) => {
-          notify(`Kipas Ruangan 2 Gagal Di ${kipasRuangan2 ? "Nyalakan" : "Matikan"}`, "danger");
+          notify(
+            `Kipas Ruangan 2 Gagal Di ${
+              kipasRuangan2 ? "Nyalakan" : "Matikan"
+            }`,
+            "danger"
+          );
           console.error("Terjadi kesalahan:", error);
         });
     } else {
-      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+      notify(
+        `Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`,
+        "danger"
+      );
     }
-  }
+  };
 
   const changeSwitchWaterPump = () => {
     const getRef = ref(database, "water_pump");
-    const collectionRef = collection(db, 'water_pump');
+    const collectionRef = collection(db, "water_pump");
 
     if (getRef._repo.server_.connected_) {
       set(getRef, !waterPump)
         .then(() => {
-          setWaterPump(!waterPump)
+          setWaterPump(!waterPump);
 
-          const value = `${!waterPump ? "Nyalakan Water Pump" : "Matikan Water Pump"}`
+          const value = `${
+            !waterPump ? "Nyalakan Water Pump" : "Matikan Water Pump"
+          }`;
           const obj = {
             aksi: value,
             timestamps: getTimeStamps(),
-            user: dataUser.name
-          }
-          addDataToFirestore(collectionRef, obj)
+            user: dataUser.name,
+          };
+          addDataToFirestore(collectionRef, obj);
 
-          notify(`Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`, "primary");
+          notify(
+            `Waterpump Berhasil Di ${!waterPump ? "Nyalakan" : "Matikan"}`,
+            "primary"
+          );
         })
         .catch((error) => {
-          notify(`Waterpump Gagal Di ${waterPump ? "Nyalakan" : "Matikan"}`, "danger");
+          notify(
+            `Waterpump Gagal Di ${waterPump ? "Nyalakan" : "Matikan"}`,
+            "danger"
+          );
           console.error("Terjadi kesalahan:", error);
         });
     } else {
-      notify(`Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`, "danger");
+      notify(
+        `Lampu Ruangan 2 Gagal Di ${lampuRuangan1 ? "Nyalakan" : "Matikan"}`,
+        "danger"
+      );
     }
-  }
+  };
+
+  const toggleModal = () => setVarOpenModal(!varOpenModal);
+
+  const changeNilaiDefaultSuhuRuangan1 = () => {
+    setVarOpenModal(true);
+    setDatabaseModal("nilai_default/def_suhu_ruangan_1");
+    setTitleModal("Nilai Default Suhu Ruangan 1");
+    setValueDefaultInput((prevValues) => ({
+      ...prevValues,
+      def_suhu_ruangan_1: data.nilai_default.def_suhu_ruangan_1,
+    }));
+    setNameInputDefault("def_suhu_ruangan_1");
+  };
+
+  const changeNilaiDefaultSuhuRuangan2 = () => {
+    setVarOpenModal(true);
+    setDatabaseModal("nilai_default/def_suhu_ruangan_2");
+    setTitleModal("Nilai Default Suhu Ruangan 2");
+    setValueDefaultInput((prevValues) => ({
+      ...prevValues,
+      def_suhu_ruangan_2: data.nilai_default.def_suhu_ruangan_2,
+    }));
+    setNameInputDefault("def_suhu_ruangan_2");
+  };
+
+  const changeNilaiDefaultCahayaRuangan1 = () => {
+    setVarOpenModal(true);
+    setDatabaseModal("nilai_default/def_cahaya_ruangan_1");
+    setTitleModal("Nilai Default Cahaya Ruangan 1");
+    setValueDefaultInput((prevValues) => ({
+      ...prevValues,
+      def_cahaya_ruangan_1: data.nilai_default.def_cahaya_ruangan_1,
+    }));
+    setNameInputDefault("def_cahaya_ruangan_1");
+  };
+
+  const changeNilaiDefaultCahayaRuangan2 = () => {
+    setVarOpenModal(true);
+    setDatabaseModal("nilai_default/def_cahaya_ruangan_2");
+    setTitleModal("Nilai Default Cahaya Ruangan 2");
+    setValueDefaultInput((prevValues) => ({
+      ...prevValues,
+      def_cahaya_ruangan_2: data.nilai_default.def_cahaya_ruangan_2,
+    }));
+    setNameInputDefault("def_cahaya_ruangan_2");
+  };
+
+  const changeNilaiDefaultFlameFire = () => {
+    setVarOpenModal(true);
+    setDatabaseModal("nilai_default/def_suhu_flame_fire");
+    setTitleModal("Nilai Default Suhu Flame Fire");
+    setValueDefaultInput((prevValues) => ({
+      ...prevValues,
+      def_suhu_flame_fire: data.nilai_default.def_suhu_flame_fire,
+    }));
+    setNameInputDefault("def_suhu_flame_fire");
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    if (
+      ((((value != "") != value) != null) != value) != 0 ||
+      isNaN(parseFloat(value))
+    ) {
+      setValueDefaultInput((prevValues) => ({
+        ...prevValues,
+        [name]: parseInt(value),
+      }));
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const getRef = ref(database, databaseModal);
+
+    try {
+      if (
+        valueDefaultInput[nameInputDefault] === "" ||
+        valueDefaultInput[nameInputDefault] === null ||
+        valueDefaultInput[nameInputDefault] === 0 ||
+        isNaN(parseFloat(valueDefaultInput[nameInputDefault]))
+      ) {
+        setErrorInputValueDefault(true);
+      } else {
+        if (getRef._repo.server_.connected_) {
+          set(getRef, valueDefaultInput[nameInputDefault])
+            .then(() => {
+              setWaterPump(!waterPump);
+              console.log("berhasil diubah");
+
+              notify(`${titleModal} Berhasil Diubah`, "primary");
+              setVarOpenModal(false);
+              setErrorInputValueDefault(false);
+            })
+            .catch((error) => {
+              console.log("gagal diubah");
+              notify(`${titleModal} Gagal Diubah`, "danger");
+              console.error("Terjadi kesalahan:", error);
+            });
+        } else {
+          console.log("gagal diubah");
+
+          notify(`${titleModal} Gagal Diubah`, "danger");
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      setErrorInputValueDefault(true);
+    }
+  };
 
   return (
     <>
       <NotificationAlert ref={notificationAlert} />
+      <Modal isOpen={varOpenModal} toggle={toggleModal}>
+        <form onSubmit={handleSubmit}>
+          <ModalHeader toggle={toggleModal}>{titleModal}</ModalHeader>
+          <ModalBody>
+            <FormGroup>
+              <Label for={nameInputDefault}>Nilai Default</Label>
+              <Input
+                id={nameInputDefault}
+                name={nameInputDefault}
+                placeholder="Masukan Nilai Default"
+                type="number"
+                value={valueDefaultInput[nameInputDefault]}
+                onChange={handleChange}
+              />
+              {errorInputValueDefault ? <div>Isi Data Dengan Benar</div> : ""}
+            </FormGroup>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="warning" type="submit" disabled={submitting}>
+              Change {spin ? <Spinner size="sm">Loading...</Spinner> : ""}
+            </Button>
+            <Button color="secondary" type="reset" onClick={toggleModal}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
       <div className="content">
         <Row>
           <Col lg="3" md="6" sm="6">
@@ -278,10 +521,22 @@ export default function DashboardIOT() {
                 </Row>
               </CardBody>
               <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fas fa-sync-alt" /> Update Now
-                </div>
+                <Rows justify="space-between">
+                  <Cols>
+                    <i className="fas fa-sync-alt" /> Update Now
+                  </Cols>
+                  <Cols>
+                    <Space direction="vertical">
+                      <Button
+                        size="sm"
+                        color="warning"
+                        onClick={changeNilaiDefaultSuhuRuangan1}
+                      >
+                        <i className="nc-icon nc-alert-circle-i" />
+                      </Button>
+                    </Space>
+                  </Cols>
+                </Rows>
               </CardFooter>
             </Card>
           </Col>
@@ -310,10 +565,22 @@ export default function DashboardIOT() {
                 </Row>
               </CardBody>
               <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="far fa-calendar" /> Last day
-                </div>
+                <Rows justify="space-between">
+                  <Cols>
+                    <i className="fas fa-sync-alt" /> Update Now
+                  </Cols>
+                  <Cols>
+                    <Space direction="vertical">
+                      <Button
+                        size="sm"
+                        color="warning"
+                        onClick={changeNilaiDefaultSuhuRuangan2}
+                      >
+                        <i className="nc-icon nc-alert-circle-i" />
+                      </Button>
+                    </Space>
+                  </Cols>
+                </Rows>
               </CardFooter>
             </Card>
           </Col>
@@ -342,10 +609,22 @@ export default function DashboardIOT() {
                 </Row>
               </CardBody>
               <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="far fa-clock" /> In the last hour
-                </div>
+                <Rows justify="space-between">
+                  <Cols>
+                    <i className="fas fa-sync-alt" /> Update Now
+                  </Cols>
+                  <Cols>
+                    <Space direction="vertical">
+                      <Button
+                        size="sm"
+                        color="warning"
+                        onClick={changeNilaiDefaultCahayaRuangan1}
+                      >
+                        <i className="nc-icon nc-alert-circle-i" />
+                      </Button>
+                    </Space>
+                  </Cols>
+                </Rows>
               </CardFooter>
             </Card>
           </Col>
@@ -374,10 +653,22 @@ export default function DashboardIOT() {
                 </Row>
               </CardBody>
               <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fas fa-sync-alt" /> Update now
-                </div>
+                <Rows justify="space-between">
+                  <Cols>
+                    <i className="fas fa-sync-alt" /> Update Now
+                  </Cols>
+                  <Cols>
+                    <Space direction="vertical">
+                      <Button
+                        size="sm"
+                        color="warning"
+                        onClick={changeNilaiDefaultCahayaRuangan2}
+                      >
+                        <i className="nc-icon nc-alert-circle-i" />
+                      </Button>
+                    </Space>
+                  </Cols>
+                </Rows>
               </CardFooter>
             </Card>
           </Col>
@@ -402,7 +693,8 @@ export default function DashboardIOT() {
                           activeClassName="active"
                         >
                           <p>Lampu Ruangan 1</p>
-                        </NavLink></p>
+                        </NavLink>
+                      </p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.lampu_ruangan_1 ? "Hidup" : "Mati"}</pre>
@@ -455,7 +747,8 @@ export default function DashboardIOT() {
                           activeClassName="active"
                         >
                           <p>Lampu Ruangan 2</p>
-                        </NavLink></p>
+                        </NavLink>
+                      </p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.lampu_ruangan_2 ? "Hidup" : "Mati"}</pre>
@@ -508,7 +801,8 @@ export default function DashboardIOT() {
                           activeClassName="active"
                         >
                           <p>Kipas Ruangan 1</p>
-                        </NavLink></p>
+                        </NavLink>
+                      </p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.kipas_ruangan_1 ? "Hidup" : "Mati"}</pre>
@@ -561,7 +855,8 @@ export default function DashboardIOT() {
                           activeClassName="active"
                         >
                           <p>Kipas Ruangan 2</p>
-                        </NavLink></p>
+                        </NavLink>
+                      </p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.kipas_ruangan_2 ? "Hidup" : "Mati"}</pre>
@@ -617,7 +912,8 @@ export default function DashboardIOT() {
                           activeClassName="active"
                         >
                           <p>Water Pump</p>
-                        </NavLink></p>
+                        </NavLink>
+                      </p>
                       <CardTitle tag="p">
                         {data ? (
                           <pre>{data.water_pump ? "Hidup" : "Mati"}</pre>
@@ -646,6 +942,16 @@ export default function DashboardIOT() {
                           onClick={changeSwitchWaterPump}
                         />
                       </Space>
+                      &nbsp;
+                      <Space direction="vertical">
+                        <Button
+                          size="sm"
+                          color="warning"
+                          onClick={changeNilaiDefaultFlameFire}
+                        >
+                          <i className="nc-icon nc-alert-circle-i" />
+                        </Button>
+                      </Space>
                     </Cols>
                   </Rows>
                 </div>
@@ -653,33 +959,6 @@ export default function DashboardIOT() {
             </Card>
           </Col>
         </Row>
-
-        {/* <Row>
-          <Col md="12">
-            <Card>
-              <CardHeader>
-                <CardTitle tag="h5">Users Behavior</CardTitle>
-                <p className="card-category">24 Hours performance</p>
-              </CardHeader>
-              <CardBody>
-              <div>
-                <h1>Realtime Database</h1>
-                {data ? (
-                  <pre>{data}</pre>
-                ) : (
-                  <p>Loading...</p>
-                )}
-              </div>
-              </CardBody>
-              <CardFooter>
-                <hr />
-                <div className="stats">
-                  <i className="fa fa-history" /> Updated 3 minutes ago
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-        </Row> */}
       </div>
     </>
   );
