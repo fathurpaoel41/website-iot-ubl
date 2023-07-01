@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Card,
-    CardHeader,
     CardBody,
     CardFooter,
+    CardHeader,
     CardTitle,
-    Row,
-    Col
+    Col,
+    Row
 } from "reactstrap";
 // core components
 import { Table } from 'antd';
 
 //firebase
 import { app } from "config/firebase";
-import { getFirestore, collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
 
 export default function ActivityLampuRuangan2() {
     const db = getFirestore(app);

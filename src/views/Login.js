@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from "react";
-import iotImage from "../assets/img/iot.jpg"; // Ubah path gambar sesuai dengan lokasi gambar Anda
-import { database, app } from "config/firebase";
-import {
-  ref,
-  get,
-  update,
-} from "firebase/database";
+import { app, database } from "config/firebase";
+import { useHistory } from "react-router-dom";
 import {
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import {
+  get,
+  ref,
+  update,
+} from "firebase/database";
+import { useState, useEffect } from "react";
+import { Spinner } from "reactstrap";
 import * as yup from 'yup';
-import { Spinner } from "reactstrap"
+import iotImage from "../assets/img/iot.jpg"; // Ubah path gambar sesuai dengan lokasi gambar Anda
 
 function Login() {
+  const history = useHistory();
+
   const [submitting, setSubmitting] = useState(true);
   const [values, setValues] = useState({
     email: '',
@@ -23,6 +26,14 @@ function Login() {
   const [touched, setTouched] = useState({});
   const [errorLogin, setErrorLogin] = useState(false);
   const [spin, setSpin] = useState(false);
+  const [dataUser, setDataUser] = useState([]);
+  const [statusLogin, setStatusLogin] = useState(false)
+
+  useEffect(()=>{
+    if(statusLogin){
+      history.push("/admin/iot-dashboard");
+    }
+  },[statusLogin,dataUser])
 
   const auth = getAuth(app);
 
@@ -95,6 +106,7 @@ function Login() {
                   const userData = snapshot.val();
                   // Lakukan sesuatu dengan data yang diambil, misalnya tampilkan di konsol
                   localStorage.setItem("datauser", JSON.stringify(userData))
+                  setDataUser(userData)
                   const currentTime = new Date().getTime();
                   localStorage.setItem("timeout", currentTime + (60 * 60 * 1000))
                 } else {
@@ -115,7 +127,7 @@ function Login() {
                 console.log("user telah sukses login = ");
                 console.log(user.uid);
                 localStorage.setItem("login", "true");
-                window.location.reload();
+                setStatusLogin(true)
               })
               .catch((error) => {
                 //the write failed

@@ -1,21 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { Line, Pie } from "react-chartjs-2";
+import { useEffect, useState } from "react";
 import {
     Card,
-    CardHeader,
     CardBody,
     CardFooter,
+    CardHeader,
     CardTitle,
-    Row,
-    Col
+    Col,
+    Row
 } from "reactstrap";
 // core components
-import { Space, Table, Tag } from 'antd';
+import { Table } from 'antd';
 
 //firebase
-import { database, app } from "config/firebase";
-import { getDatabase, ref, onValue, off, get, set } from "firebase/database";
-import { getFirestore, collection, getDocs, addDoc } from 'firebase/firestore'
+import { app } from "config/firebase";
+import { collection, getDocs, getFirestore } from 'firebase/firestore';
 
 export default function ActivityKipasRuangan2() {
     const db = getFirestore(app);

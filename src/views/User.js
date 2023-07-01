@@ -16,48 +16,35 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import { data } from "jquery";
-import React, { useEffect, useState, useRef } from "react";
-import { database, app } from "config/firebase";
-import { getDatabase, ref, onValue, off, get, set } from "firebase/database";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-} from "firebase/firestore/lite";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { app } from "config/firebase";
+import { getAuth, signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { useEffect, useRef, useState } from "react";
 
 // reactstrap components
+import NotificationAlert from "react-notification-alert";
 import {
   Button,
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
-  CardTitle,
+  Col,
   FormGroup,
-  Form,
-  Row,
-  Col, Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Input,
   Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row,
   Spinner
 } from "reactstrap";
-import NotificationAlert from "react-notification-alert";
-import * as yup from 'yup'
+import * as yup from 'yup';
 
 
 function User() {
   const [dataUser, setDataUser] = useState(null)
   const [modal, setModal] = useState(false);
   const notificationAlert = useRef();
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
 
   //validasi 
   const [values, setValues] = useState({
@@ -198,9 +185,6 @@ function User() {
   }, [])
 
   const toggle = () => setModal(!modal);
-  const changeOldPassword = (e) => setOldPassword(e.target.value)
-  const changeNewPassword = (e) => setNewPassword(e.target.value)
-  const changePasswordConfirmation = (e) => setPasswordConfirmation(e.target.value)
 
   //Alert
   const notify = (message, color) => {

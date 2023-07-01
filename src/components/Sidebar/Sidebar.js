@@ -29,6 +29,7 @@ var ps;
 function Sidebar(props) {
   const sidebar = React.useRef();
   const [arrRoute, setArrRoute] = React.useState(props.routes)
+  const dataUser = JSON.parse(localStorage.getItem("datauser"))
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName, following) => {
     let arrResult = null
@@ -82,6 +83,9 @@ function Sidebar(props) {
       <div className="sidebar-wrapper" ref={sidebar}>
         <Nav>
           {props.routes.map((prop, key) => {
+             if (dataUser.role !== "administrator" && prop.path === "/list-user") {
+              return null; // Tidak menampilkan item menu list-user
+            }
             return (
                 <div style={{display: prop.following == false ? "block":"none"}}>
                   <li

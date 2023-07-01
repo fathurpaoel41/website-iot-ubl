@@ -1,15 +1,15 @@
 import React from "react";
 import NotificationAlert from "react-notification-alert";
 import {
-  UncontrolledAlert,
   Alert,
   Button,
   Card,
-  CardHeader,
   CardBody,
+  CardHeader,
   CardTitle,
+  Col,
   Row,
-  Col
+  UncontrolledAlert
 } from "reactstrap";
 
 function Notifications() {

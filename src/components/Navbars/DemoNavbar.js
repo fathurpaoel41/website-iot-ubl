@@ -17,6 +17,7 @@
 
 */
 import React from "react";
+import { useHistory } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 import {
   Collapse,
@@ -43,6 +44,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"
 
 function Header(props) {
+  const history = useHistory();
   const [isOpen, setIsOpen] = React.useState(false);
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
   const [color, setColor] = React.useState("transparent");
@@ -60,7 +62,7 @@ function Header(props) {
     if (currentTime > getTimeOutLocal) {
       signOutAuth()
       localStorage.setItem("login", "false")
-      window.location.reload()
+      history.push("/login");
     }
   }
 
@@ -71,7 +73,7 @@ function Header(props) {
   const logoutUser = async () => {
     await signOut(auth);
     localStorage.setItem("login", "false")
-    window.location.reload()
+    history.push("/login");
   }
 
   const toggle = () => {

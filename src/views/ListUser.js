@@ -1,40 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { Line, Pie } from "react-chartjs-2";
 import {
+  Button,
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
+  CardHeader,
   CardTitle,
-  Row,
   Col,
-  Button,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  FormGroup,
   Input,
   Label,
-  FormGroup,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row,
   Spinner
 } from "reactstrap";
 // core components
-import { Space, Table, Tag } from "antd";
+import { Table } from "antd";
 
 //firebase
-import { database, app } from "config/firebase";
-import { getDatabase, ref, onValue, off, get, set } from "firebase/database";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-} from "firebase/firestore/lite";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+// import bcrypt from 'bcryptjs';
+import { app, database } from "config/firebase";
+import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
+import { onValue, ref, set } from "firebase/database";
 import NotificationAlert from "react-notification-alert";
-import * as yup from 'yup'
-import bcrypt from 'bcryptjs'
-const salt = bcrypt.genSaltSync(10)
+import * as yup from 'yup';
+// const salt = bcrypt.genSaltSync(10)
 
 export default function ListUser() {
   const [dataUser, setDataUser] = useState([]);
@@ -165,13 +158,13 @@ export default function ListUser() {
           .then((userCredential) => {
             // Signed in
             const user = userCredential.user;
-            const hashPassword = createMD5Hash(values.password)
+            // const hashPassword = createMD5Hash(values.password)
 
             set(ref(database, "user/" + user.uid), {
               name: values.name,
               role: values.role,
               email: values.email,
-              password: hashPassword
+              password: values.password
             })
               .then(() => {
                 notify("Data User Berhasil Dibuat", "primary");
@@ -262,9 +255,9 @@ export default function ListUser() {
 
   const toggle = () => setModal(!modal);
 
-  const createMD5Hash = (password) => {
-    return bcrypt.hashSync(password, '$2a$10$CwTycUXWue0Thq9StjUM0u')
-  }
+  // const createMD5Hash = (password) => {
+  //   return bcrypt.hashSync(password, '$2a$10$CwTycUXWue0Thq9StjUM0u')
+  // }
 
   return (
     <>

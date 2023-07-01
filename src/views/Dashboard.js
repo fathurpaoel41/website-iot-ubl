@@ -16,18 +16,17 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import React from "react";
 // react plugin used to create charts
 import { Line, Pie } from "react-chartjs-2";
 // reactstrap components
 import {
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
+  CardHeader,
   CardTitle,
-  Row,
-  Col
+  Col,
+  Row
 } from "reactstrap";
 // core components
 import {

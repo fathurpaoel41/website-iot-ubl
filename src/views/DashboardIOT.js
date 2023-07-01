@@ -1,53 +1,44 @@
-import React, { useState, useEffect } from "react";
-import { Line, Pie } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
+import NotificationAlert from "react-notification-alert";
+import { NavLink } from "react-router-dom";
 import {
+  Button,
   Card,
-  UncontrolledAlert,
-  CardHeader,
   CardBody,
   CardFooter,
   CardTitle,
-  Row,
   Col,
-  Button,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  FormGroup,
   Input,
   Label,
-  FormGroup,
-  Spinner,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  Row,
+  Spinner
 } from "reactstrap";
-import NotificationAlert from "react-notification-alert";
-import { NavLink } from "react-router-dom";
 
-import { Space, Switch, Row as Rows, Col as Cols } from "antd";
+import { Col as Cols, Row as Rows, Space, Switch } from "antd";
 
 //firebase
-import { database, app } from "config/firebase";
+import { app, database } from "config/firebase";
 import {
-  getDatabase,
-  ref,
-  onValue,
-  off,
-  get,
-  set,
-  update,
-} from "firebase/database";
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+  getAuth
 } from "firebase/auth";
+import {
+  onValue,
+  ref,
+  set
+} from "firebase/database";
+import { addDoc, collection, getFirestore } from "firebase/firestore";
 
 //Costum Component
 
-import * as yup from "yup";
 
 export default function DashboardIOT() {
   const [data, setData] = useState([]);
+  const [dataDefault, setDataDefault] = useState([]);
   const [lampuRuangan1, setLampuRuangan1] = useState(false);
   const [lampuRuangan2, setLampuRuangan2] = useState(false);
   const [kipasRuangan1, setKipasRuangan1] = useState(false);
@@ -55,14 +46,11 @@ export default function DashboardIOT() {
   const [waterPump, setWaterPump] = useState(false);
   const notificationAlert = React.useRef();
   const db = getFirestore(app);
-  const auth = getAuth(app);
   const [dataUser, setDataUser] = useState([]);
   //untuk modalnya
   const [varOpenModal, setVarOpenModal] = useState(false);
   const [titleModal, setTitleModal] = useState("");
   const [databaseModal, setDatabaseModal] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [spin, setSpin] = useState(false);
   const [nameInputDefault, setNameInputDefault] = useState("");
   const [valueDefaultInput, setValueDefaultInput] = useState({
     def_suhu_ruangan_1: "",
@@ -85,13 +73,14 @@ export default function DashboardIOT() {
         const dataArray = Object.keys(value.user).map((key) => {
           return { id: key, ...value.user[key] };
         });
-        setData(value);
+        setData(value.data_sensor);
+        setDataDefault(value)
         // localStorage.setItem("iot",JSON.stringify(value))
-        setLampuRuangan1(value.lampu_ruangan_1);
-        setLampuRuangan2(value.lampu_ruangan_2);
-        setKipasRuangan1(value.kipas_ruangan_1);
-        setKipasRuangan2(value.kipas_ruangan_2);
-        setWaterPump(value.water_pump);
+        setLampuRuangan1(value.data_sensor.lampu_ruangan_1);
+        setLampuRuangan2(value.data_sensor.lampu_ruangan_2);
+        setKipasRuangan1(value.data_sensor.kipas_ruangan_1);
+        setKipasRuangan2(value.data_sensor.kipas_ruangan_2);
+        setWaterPump(value.data_sensor.water_pump);
       } else {
         console.log("Tidak ada data yang tersedia.");
       }
@@ -104,6 +93,8 @@ export default function DashboardIOT() {
     //   off(databaseRef);
     // };
   }, []);
+
+  console.log({lampuRuangan1})
 
   //Alert
   const notify = (message, color) => {
@@ -145,7 +136,7 @@ export default function DashboardIOT() {
   };
 
   const changeSwitchLampuRuangan1 = () => {
-    const getRef = ref(database, "lampu_ruangan_1");
+    const getRef = ref(database, "data_sensor/lampu_ruangan_1");
     const collectionRef = collection(db, "lampu_ruangan_1");
     if (getRef._repo.server_.connected_) {
       set(getRef, !lampuRuangan1)
@@ -187,7 +178,7 @@ export default function DashboardIOT() {
   };
 
   const changeSwitchLampuRuangan2 = () => {
-    const getRef = ref(database, "lampu_ruangan_2");
+    const getRef = ref(database, "data_sensor/lampu_ruangan_2");
     const collectionRef = collection(db, "lampu_ruangan_2");
     if (getRef._repo.server_.connected_) {
       set(getRef, !lampuRuangan2)
@@ -229,7 +220,7 @@ export default function DashboardIOT() {
   };
 
   const changeSwitchKipasRuangan1 = () => {
-    const getRef = ref(database, "kipas_ruangan_1");
+    const getRef = ref(database, "data_sensor/kipas_ruangan_1");
     const collectionRef = collection(db, "kipas_ruangan_1");
 
     if (getRef._repo.server_.connected_) {
@@ -272,7 +263,7 @@ export default function DashboardIOT() {
   };
 
   const changeSwitchKipasRuangan2 = () => {
-    const getRef = ref(database, "kipas_ruangan_2");
+    const getRef = ref(database, "data_sensor/kipas_ruangan_2");
     const collectionRef = collection(db, "kipas_ruangan_2");
 
     if (getRef._repo.server_.connected_) {
@@ -315,7 +306,7 @@ export default function DashboardIOT() {
   };
 
   const changeSwitchWaterPump = () => {
-    const getRef = ref(database, "water_pump");
+    const getRef = ref(database, "data_sensor/water_pump");
     const collectionRef = collection(db, "water_pump");
 
     if (getRef._repo.server_.connected_) {
@@ -361,7 +352,7 @@ export default function DashboardIOT() {
     setTitleModal("Nilai Default Suhu Ruangan 1");
     setValueDefaultInput((prevValues) => ({
       ...prevValues,
-      def_suhu_ruangan_1: data.nilai_default.def_suhu_ruangan_1,
+      def_suhu_ruangan_1: dataDefault.nilai_default.def_suhu_ruangan_1,
     }));
     setNameInputDefault("def_suhu_ruangan_1");
   };
@@ -372,7 +363,7 @@ export default function DashboardIOT() {
     setTitleModal("Nilai Default Suhu Ruangan 2");
     setValueDefaultInput((prevValues) => ({
       ...prevValues,
-      def_suhu_ruangan_2: data.nilai_default.def_suhu_ruangan_2,
+      def_suhu_ruangan_2: dataDefault.nilai_default.def_suhu_ruangan_2,
     }));
     setNameInputDefault("def_suhu_ruangan_2");
   };
@@ -383,7 +374,7 @@ export default function DashboardIOT() {
     setTitleModal("Nilai Default Cahaya Ruangan 1");
     setValueDefaultInput((prevValues) => ({
       ...prevValues,
-      def_cahaya_ruangan_1: data.nilai_default.def_cahaya_ruangan_1,
+      def_cahaya_ruangan_1: dataDefault.nilai_default.def_cahaya_ruangan_1,
     }));
     setNameInputDefault("def_cahaya_ruangan_1");
   };
@@ -394,7 +385,7 @@ export default function DashboardIOT() {
     setTitleModal("Nilai Default Cahaya Ruangan 2");
     setValueDefaultInput((prevValues) => ({
       ...prevValues,
-      def_cahaya_ruangan_2: data.nilai_default.def_cahaya_ruangan_2,
+      def_cahaya_ruangan_2: dataDefault.nilai_default.def_cahaya_ruangan_2,
     }));
     setNameInputDefault("def_cahaya_ruangan_2");
   };
@@ -405,7 +396,7 @@ export default function DashboardIOT() {
     setTitleModal("Nilai Default Suhu Flame Fire");
     setValueDefaultInput((prevValues) => ({
       ...prevValues,
-      def_suhu_flame_fire: data.nilai_default.def_suhu_flame_fire,
+      def_suhu_flame_fire: dataDefault.nilai_default.def_suhu_flame_fire,
     }));
     setNameInputDefault("def_suhu_flame_fire");
   };
@@ -440,8 +431,7 @@ export default function DashboardIOT() {
         if (getRef._repo.server_.connected_) {
           set(getRef, valueDefaultInput[nameInputDefault])
             .then(() => {
-              setWaterPump(!waterPump);
-              console.log("berhasil diubah");
+              // setWaterPump(!waterPump);
 
               notify(`${titleModal} Berhasil Diubah`, "primary");
               setVarOpenModal(false);
@@ -485,8 +475,8 @@ export default function DashboardIOT() {
             </FormGroup>
           </ModalBody>
           <ModalFooter>
-            <Button color="warning" type="submit" disabled={submitting}>
-              Change {spin ? <Spinner size="sm">Loading...</Spinner> : ""}
+            <Button color="warning" type="submit">
+              Change 
             </Button>
             <Button color="secondary" type="reset" onClick={toggleModal}>
               Cancel
@@ -525,7 +515,7 @@ export default function DashboardIOT() {
                   <Cols>
                     <i className="fas fa-sync-alt" /> Update Now
                   </Cols>
-                  <Cols>
+                  {dataUser.role != "viewer" ?(<><Cols>
                     <Space direction="vertical">
                       <Button
                         size="sm"
@@ -535,7 +525,8 @@ export default function DashboardIOT() {
                         <i className="nc-icon nc-alert-circle-i" />
                       </Button>
                     </Space>
-                  </Cols>
+                  </Cols></>):""}
+                  
                 </Rows>
               </CardFooter>
             </Card>
@@ -569,7 +560,7 @@ export default function DashboardIOT() {
                   <Cols>
                     <i className="fas fa-sync-alt" /> Update Now
                   </Cols>
-                  <Cols>
+                  {dataUser.role != "viewer" ?(<><Cols>
                     <Space direction="vertical">
                       <Button
                         size="sm"
@@ -579,7 +570,8 @@ export default function DashboardIOT() {
                         <i className="nc-icon nc-alert-circle-i" />
                       </Button>
                     </Space>
-                  </Cols>
+                  </Cols></>):""}
+                  
                 </Rows>
               </CardFooter>
             </Card>
@@ -613,7 +605,7 @@ export default function DashboardIOT() {
                   <Cols>
                     <i className="fas fa-sync-alt" /> Update Now
                   </Cols>
-                  <Cols>
+                  {dataUser.role != "viewer" ?(<><Cols>
                     <Space direction="vertical">
                       <Button
                         size="sm"
@@ -623,7 +615,8 @@ export default function DashboardIOT() {
                         <i className="nc-icon nc-alert-circle-i" />
                       </Button>
                     </Space>
-                  </Cols>
+                  </Cols></>):""}
+                  
                 </Rows>
               </CardFooter>
             </Card>
@@ -657,7 +650,7 @@ export default function DashboardIOT() {
                   <Cols>
                     <i className="fas fa-sync-alt" /> Update Now
                   </Cols>
-                  <Cols>
+                  {dataUser.role != "viewer" ? (<> <Cols>
                     <Space direction="vertical">
                       <Button
                         size="sm"
@@ -667,7 +660,8 @@ export default function DashboardIOT() {
                         <i className="nc-icon nc-alert-circle-i" />
                       </Button>
                     </Space>
-                  </Cols>
+                  </Cols></>):""}
+                 
                 </Rows>
               </CardFooter>
             </Card>
@@ -714,7 +708,7 @@ export default function DashboardIOT() {
                     <Cols>
                       <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
-                    <Cols>
+                    {dataUser.role != "viewer" ? (<><Cols>
                       <Space direction="vertical">
                         <Switch
                           checkedChildren="Menyala"
@@ -723,7 +717,8 @@ export default function DashboardIOT() {
                           onClick={changeSwitchLampuRuangan1}
                         />
                       </Space>
-                    </Cols>
+                    </Cols></>):""}
+                    
                   </Rows>
                 </div>
               </CardFooter>
@@ -768,7 +763,7 @@ export default function DashboardIOT() {
                     <Cols>
                       <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
-                    <Cols>
+                    {dataUser.role != "viewer" ? (<><Cols>
                       <Space direction="vertical">
                         <Switch
                           checkedChildren="Menyala"
@@ -777,7 +772,7 @@ export default function DashboardIOT() {
                           onClick={changeSwitchLampuRuangan2}
                         />
                       </Space>
-                    </Cols>
+                    </Cols></>):""}
                   </Rows>
                 </div>
               </CardFooter>
@@ -822,7 +817,7 @@ export default function DashboardIOT() {
                     <Cols>
                       <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
-                    <Cols>
+                    {dataUser.role != "viewer" ? (<><Cols>
                       <Space direction="vertical">
                         <Switch
                           checkedChildren="Menyala"
@@ -831,7 +826,7 @@ export default function DashboardIOT() {
                           onClick={changeSwitchKipasRuangan1}
                         />
                       </Space>
-                    </Cols>
+                    </Cols></>):""}
                   </Rows>
                 </div>
               </CardFooter>
@@ -876,7 +871,7 @@ export default function DashboardIOT() {
                     <Cols>
                       <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
-                    <Cols>
+                    {dataUser.role != "viewer" ? (<><Cols>
                       <Space direction="vertical">
                         <Switch
                           checkedChildren="Menyala"
@@ -885,7 +880,7 @@ export default function DashboardIOT() {
                           onClick={changeSwitchKipasRuangan2}
                         />
                       </Space>
-                    </Cols>
+                    </Cols></>):""}
                   </Rows>
                 </div>
               </CardFooter>
@@ -933,7 +928,7 @@ export default function DashboardIOT() {
                     <Cols>
                       <i className="fas fa-sync-alt" /> Update Now
                     </Cols>
-                    <Cols>
+                     {dataUser.role != "viewer" ? (<><Cols>
                       <Space direction="vertical">
                         <Switch
                           checkedChildren="Menyala"
@@ -952,7 +947,8 @@ export default function DashboardIOT() {
                           <i className="nc-icon nc-alert-circle-i" />
                         </Button>
                       </Space>
-                    </Cols>
+                    </Cols></>):""}
+                    
                   </Rows>
                 </div>
               </CardFooter>

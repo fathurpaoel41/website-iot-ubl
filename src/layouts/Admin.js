@@ -28,6 +28,9 @@ import FixedPlugin from "components/FixedPlugin/FixedPlugin.js";
 
 import routes from "routes.js";
 import { DataFetchProvider } from "../context/DataFetchContext";
+import NotificationAlert from "react-notification-alert";
+import { app, database } from "config/firebase";
+import { onValue, ref, set } from "firebase/database";
 
 var ps;
 
@@ -36,6 +39,12 @@ function Dashboard(props) {
   const [activeColor, setActiveColor] = React.useState("info");
   const mainPanel = React.useRef();
   const location = useLocation();
+  const notificationAlert = React.useRef();
+  const [dataSensor, setDataSensor] = React.useState([]);
+  const [dataNilaiDefault, SetDataNilaiDefault] = React.useState([]);
+
+  const dataUser = JSON.parse(localStorage.getItem("datauser"));
+
   React.useEffect(() => {
     if (navigator.platform.indexOf("Win") > -1) {
       ps = new PerfectScrollbar(mainPanel.current);
@@ -48,6 +57,7 @@ function Dashboard(props) {
       }
     };
   });
+
   React.useEffect(() => {
     mainPanel.current.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
@@ -58,8 +68,111 @@ function Dashboard(props) {
   const handleBgClick = (color) => {
     setBackgroundColor(color);
   };
+
+  React.useEffect(() => {
+    const databaseRef = ref(database);
+
+    onValue(databaseRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const value = snapshot.val();
+        setDataSensor(value.data_sensor);
+        SetDataNilaiDefault(value.nilai_default);
+      } else {
+        console.log("Tidak ada data yang tersedia.");
+      }
+    });
+  }, []);
+
+  React.useEffect(() => {
+    //notifikasi sensor
+    let timeoutId; // Variabel untuk menyimpan ID timeout
+
+    const checkSensorData = () => {
+      if (
+        dataSensor.suhu_ruangan_1 > dataNilaiDefault.def_suhu_ruangan_1 &&
+        dataSensor.kipas_ruangan_1 == false
+      ) {
+        notify(
+          `suhu ruangan 1 sangat tinggi ${dataSensor.suhu_ruangan_1}°C. Saran: Nyalakan kipas angin untuk membantu mengurangi suhu.`,
+          "danger"
+        );
+      }
+      if (
+        dataSensor.suhu_ruangan_2 > dataNilaiDefault.def_suhu_ruangan_2 &&
+        dataSensor.kipas_ruangan_2 == false
+      ) {
+        notify(
+          `suhu ruangan 2 sangat tinggi ${dataSensor.suhu_ruangan_2}°C. Saran: Nyalakan kipas angin untuk membantu mengurangi suhu.`,
+          "danger"
+        );
+      }
+      if (
+        dataSensor.cahaya_ruangan_1 > dataNilaiDefault.def_cahaya_ruangan_1 &&
+        dataSensor.lampu_ruangan_1 == false
+      ) {
+        notify(
+          `Cahaya Ruangan 1 terlalu gelap. Saran: Nyalakan lampu untuk menerangi ruangan.`,
+          "danger"
+        );
+      }
+      if (
+        dataSensor.cahaya_ruangan_2 > dataNilaiDefault.def_cahaya_ruangan_2 &&
+        dataSensor.lampu_ruangan_2 == false
+      ) {
+        notify(
+          `Cahaya Ruangan 2 terlalu gelap. Saran: Nyalakan lampu untuk menerangi ruangan.`,
+          "danger"
+        );
+      }
+      if (
+        dataSensor.suhu_flame_fire_ruangan_1 >
+          dataNilaiDefault.def_suhu_flame_fire_ruangan_1 &&
+        dataSensor.water_pump == false
+      ) {
+        notify(
+          `sensor mendeteksi adanya api di ruangan 1. Tindakan yang perlu diambil: Lakukan pemadaman segera untuk mengatasi situasi ini.`,
+          "danger"
+        );
+      }
+      if (
+        dataSensor.suhu_flame_fire_ruangan_2 >
+          dataNilaiDefault.def_suhu_flame_fire_ruangan_2 &&
+        dataSensor.water_pump == false
+      ) {
+        notify(
+          `sensor mendeteksi adanya api di ruangan 1. Tindakan yang perlu diambil: Lakukan pemadaman segera untuk mengatasi situasi ini.`,
+          "danger"
+        );
+      }
+      timeoutId = setTimeout(checkSensorData, 20000);
+    };
+
+    checkSensorData();
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [dataSensor, dataNilaiDefault]);
+
+  const notify = (message, color) => {
+    var options = {};
+    options = {
+      place: "tr",
+      message: (
+        <div>
+          <div>{message}</div>
+        </div>
+      ),
+      type: color,
+      icon: "nc-icon nc-bell-55",
+      autoDismiss: 10,
+    };
+    notificationAlert.current.notificationAlert(options);
+  };
+
   return (
     <>
+      <NotificationAlert ref={notificationAlert} />
       <DataFetchProvider>
         <div className="wrapper">
           <Sidebar
@@ -72,6 +185,15 @@ function Dashboard(props) {
             <DemoNavbar {...props} />
             <Switch>
               {routes.map((prop, key) => {
+                // Tambahkan kondisi di sini
+                if (
+                  prop.path === "/list-user" &&
+                  dataUser &&
+                  dataUser.role !== "administrator"
+                ) {
+                  return null; // Jika peran pengguna bukan "administrator", jangan tampilkan route "list-user"
+                }
+
                 return (
                   <Route
                     path={prop.layout + prop.path}
@@ -89,7 +211,7 @@ function Dashboard(props) {
             handleActiveClick={handleActiveClick}
             handleBgClick={handleBgClick}
           /> */}
-      </div>
+        </div>
       </DataFetchProvider>
     </>
   );

@@ -27,34 +27,49 @@ import "perfect-scrollbar/css/perfect-scrollbar.css";
 
 import AdminLayout from "layouts/Admin.js";
 import Login from "views/Login";
+import ListUser from "views/ListUser";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 const getLogin = localStorage.getItem("login");
 let login = null;
 if (getLogin == "true") {
   login = true;
-  console.log("1", getLogin);
 } else {
   login = false;
-  console.log("2", getLogin);
 }
 
 root.render(
   <>
     <BrowserRouter>
       <Switch>
+       
         {login ? (
           <>
-            <Route
-              path="/admin"
-              render={(props) => <AdminLayout {...props} />}
+          <Route
+            path="/admin"
+            render={(props) => <AdminLayout {...props} />}
+          />
+          <Route
+            path="/login"
+            render={(props) => <Login {...props} />}
+          />
+          <Route
+              path="/admin/list-user"
+              component={ListUser}
             />
-            <Redirect to="/admin/iot-dashboard" />
+          <Redirect to="/admin/iot-dashboard" />
           </>
         ) : (
           <>
-            <Route path="/login" render={(props) => <Login {...props} />} />
-            <Redirect to="/login" />
+            <Route
+            path="/login"
+            render={(props) => <Login {...props} />}
+          />
+          <Route
+            path="/admin"
+            render={(props) => <AdminLayout {...props} />}
+          />
+          <Redirect to="/login" />
           </>
         )}
       </Switch>

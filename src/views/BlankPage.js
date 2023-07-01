@@ -1,20 +1,13 @@
-import React from "react";
-import { Line, Pie } from "react-chartjs-2";
 import {
   Card,
-  CardHeader,
   CardBody,
   CardFooter,
+  CardHeader,
   CardTitle,
-  Row,
-  Col
+  Col,
+  Row
 } from "reactstrap";
 // core components
-import {
-  dashboard24HoursPerformanceChart,
-  dashboardEmailStatisticsChart,
-  dashboardNASDAQChart
-} from "variables/charts.js";
 
 export default function BlankPage() {
   return (
