@@ -125,8 +125,8 @@ function Dashboard(props) {
         );
       }
       if (
-        dataSensor.suhu_flame_fire_ruangan_1 >
-          dataNilaiDefault.def_suhu_flame_fire_ruangan_1 &&
+        dataSensor.suhu_flame_fire_ruangan_1 <
+          dataNilaiDefault.def_suhu_flame_fire &&
         dataSensor.water_pump == false
       ) {
         notify(
@@ -135,16 +135,16 @@ function Dashboard(props) {
         );
       }
       if (
-        dataSensor.suhu_flame_fire_ruangan_2 >
-          dataNilaiDefault.def_suhu_flame_fire_ruangan_2 &&
+        dataSensor.suhu_flame_fire_ruangan_2 <
+          dataNilaiDefault.def_suhu_flame_fire &&
         dataSensor.water_pump == false
       ) {
         notify(
-          `sensor mendeteksi adanya api di ruangan 1. Tindakan yang perlu diambil: Lakukan pemadaman segera untuk mengatasi situasi ini.`,
+          `sensor mendeteksi adanya api di ruangan 2. Tindakan yang perlu diambil: Lakukan pemadaman segera untuk mengatasi situasi ini.`,
           "danger"
         );
       }
-      timeoutId = setTimeout(checkSensorData, 20000);
+      timeoutId = setTimeout(checkSensorData, 25000);
     };
 
     checkSensorData();
